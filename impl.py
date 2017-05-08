@@ -146,14 +146,13 @@ class salesforceManager(ThreePBase):
         :param params: dict, required to generate ds_config dict object for storage
         :return: newly created ds_config. The value obtained in params is
         a dictionary that should contain following keys:
-             sf_schema,
              sf_object_schema,
              sf_objects,
         
         """
 
         ds_config = {
-            CONFIG_FIELDS.SF_SCHEMA: params.get(CONFIG_FIELDS.SF_SCHEMA),
+           
             CONFIG_FIELDS.SF_OBJECT_SCHEMA: params.get(CONFIG_FIELDS.SF_OBJECT_SCHEMA),
             CONFIG_FIELDS.SF_OBJECTS: params.get(CONFIG_FIELDS.SF_OBJECTS)
         }

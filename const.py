@@ -12,7 +12,6 @@ class IDENTITY_FIELDS:
 
 
 class CONFIG_FIELDS:
-    SF_SCHEMA = "sf_schema"
     SF_OBJECT_SCHEMA = "sf_object_schema"
     SF_OBJECTS = "sf_objects"
     
