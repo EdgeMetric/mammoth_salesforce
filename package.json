@@ -1,0 +1,6 @@
+{
+    "package_code": "salesforce", 
+    "module_class_name": "salesforce", 
+    "entry_module_name": "salesforce_app_interface", 
+    "relative_path": "salesforce"
+}

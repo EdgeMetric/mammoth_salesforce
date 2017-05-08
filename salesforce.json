@@ -1,0 +1,192 @@
+{
+    "module_name": "SalesForce", 
+    "module_type": "rdbms", 
+    "USER_INPUT_JSON": {
+        "capability": {
+            "ds_config_validation_mode": "AUTO", 
+            "preview_enabled": true, 
+            "minimum_schedule_frequency": 0, 
+            "config_validation_required": true, 
+            "schedule_type": "MOMENT"
+        }, 
+        "fields": {
+            "sf_schema": {
+                "long_desc": "", 
+                "server_auto_suggest": false, 
+                "dependent_on": false, 
+                "key": "sf_schema", 
+                "placeholder": "", 
+                "default_value": null, 
+                "server_validate": false, 
+                "pattern": null, 
+                "required": false, 
+                "short_desc": "", 
+                "label": "Salesforce Schema", 
+                "type": "LABEL"
+            }, 
+            "sf_object_schema": {
+                "long_desc": "", 
+                "server_auto_suggest": false, 
+                "dependent_on": false, 
+                "key": "sf_object_schema", 
+                "placeholder": "", 
+                "default_value": null, 
+                "server_validate": false, 
+                "pattern": null, 
+                "required": false, 
+                "short_desc": "", 
+                "label": "Select object's Schema", 
+                "type": "MULTI_SELECT_LIST"
+            }, 
+            "sf_objects": {
+                "long_desc": "n", 
+                "server_auto_suggest": false, 
+                "dependent_on": false, 
+                "key": "sf_objects", 
+                "placeholder": "", 
+                "default_value": null, 
+                "server_validate": false, 
+                "pattern": null, 
+                "required": false, 
+                "short_desc": "n", 
+                "label": "SalesForce objects", 
+                "type": "SINGLE_SELECT_LIST"
+            }
+        }, 
+        "ux": {
+            "attributes": {
+                "sf_schema": {}, 
+                "sf_object_schema": {
+                    "items": null, 
+                    "ui_type": "", 
+                    "onChange": "", 
+                    "list_type": "DYNAMIC", 
+                    "size": null
+                }, 
+                "sf_objects": {
+                    "items": null, 
+                    "ui_type": "", 
+                    "onChange": "", 
+                    "list_type": "DYNAMIC", 
+                    "size": null
+                }
+            }, 
+            "edit_layout": [], 
+            "layout": [
+                {
+                    "width": {
+                        "value": "100", 
+                        "unit": "%"
+                    }, 
+                    "classes": "", 
+                    "type": "field", 
+                    "key": "sf_objects"
+                }, 
+                {
+                    "width": {
+                        "value": "100", 
+                        "unit": "%"
+                    }, 
+                    "classes": "", 
+                    "type": "field", 
+                    "key": "sf_schema"
+                }, 
+                {
+                    "width": {
+                        "value": "100", 
+                        "unit": "%"
+                    }, 
+                    "classes": "", 
+                    "type": "field", 
+                    "key": "sf_object_schema"
+                }
+            ]
+        }
+    }, 
+    "AUTH": {
+        "fields": {
+            "username": {
+                "long_desc": "", 
+                "server_auto_suggest": false, 
+                "dependent_on": false, 
+                "key": "username", 
+                "placeholder": "", 
+                "default_value": null, 
+                "server_validate": false, 
+                "pattern": null, 
+                "required": false, 
+                "short_desc": "", 
+                "label": "Username", 
+                "type": "TEXT_BOX"
+            }, 
+            "password": {
+                "long_desc": "", 
+                "server_auto_suggest": false, 
+                "dependent_on": false, 
+                "key": "password", 
+                "placeholder": "", 
+                "default_value": null, 
+                "server_validate": false, 
+                "pattern": null, 
+                "required": false, 
+                "short_desc": "", 
+                "label": "Password", 
+                "type": "PASSWORD"
+            }, 
+            "security_token": {
+                "long_desc": "", 
+                "server_auto_suggest": false, 
+                "dependent_on": false, 
+                "key": "security_token", 
+                "placeholder": "", 
+                "default_value": null, 
+                "server_validate": false, 
+                "pattern": null, 
+                "required": false, 
+                "short_desc": "", 
+                "label": "Security Token", 
+                "type": "PASSWORD"
+            }
+        }, 
+        "type": "PASSWORD", 
+        "ux": {
+            "attributes": {
+                "username": {}, 
+                "password": {}, 
+                "security_token": {}
+            }, 
+            "edit_layout": [], 
+            "layout": [
+                {
+                    "width": {
+                        "value": "100", 
+                        "unit": "%"
+                    }, 
+                    "classes": "", 
+                    "type": "field", 
+                    "key": "username"
+                }, 
+                {
+                    "width": {
+                        "value": "100", 
+                        "unit": "%"
+                    }, 
+                    "classes": "", 
+                    "type": "field", 
+                    "key": "password"
+                }, 
+                {
+                    "width": {
+                        "value": "100", 
+                        "unit": "%"
+                    }, 
+                    "classes": "", 
+                    "type": "field", 
+                    "key": "security_token"
+                }
+            ]
+        }, 
+        "has_profiles": false
+    }, 
+    "module_code": "salesforce"
+}
