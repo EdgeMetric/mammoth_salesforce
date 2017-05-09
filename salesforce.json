@@ -6,7 +6,7 @@
             "ds_config_validation_mode": "AUTO", 
             "preview_enabled": true, 
             "minimum_schedule_frequency": 0, 
-            "config_validation_required": true, 
+            "config_validation_required": false, 
             "schedule_type": "MOMENT"
         }, 
         "fields": {

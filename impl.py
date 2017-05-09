@@ -4,13 +4,13 @@ import os
 import const
 import json
 import  logging as log
-import pydash as _
 import sdk.const as sdkconst
 from sdk.const import COMMON_CONFIG_FIELDS, \
     COMMON_IDENTITY_FIELDS, NAME, VALUE
 from const import CONFIG_FIELDS, IDENTITY_FIELDS
 from threep.base import ThreePBase
 from sdk.utils import get_key_value_label, make_kv_list
+import pydash as _
 
 # Insert your import statements here
 from runtime_import.libs.salesforce.util import salesforceDataYielder
@@ -136,9 +136,9 @@ class salesforceManager(ThreePBase):
             :return:  ds_config_spec.
             Any dynamic changes to ds_config_spec, if required, should be made here.
         """
-        _.set_(ds_config_spec, 'ux.attributes.sf_objects.items', [{"name": "module_1", "value": "module_1"}])
-        _.set_(ds_config_spec, 'ux.attributes.sf_object_schema', {"module_1": [{"field" : "field_1", "isRelationship": True, "type" : "Text"}]})
-        _.set_(ds_config_spec, 'ux.attributes.fields', [{"name": "field_1", "value": "field_1"}])
+        _.set_(ds_config_spec, 'ux.attributes.sf_objects.items', [
+          {"name": "module_1", "value": "module_1"}
+        ])
         return ds_config_spec
 
     def get_ds_config_for_storage(self, params=None):
@@ -152,7 +152,6 @@ class salesforceManager(ThreePBase):
         """
 
         ds_config = {
-           
             CONFIG_FIELDS.SF_OBJECT_SCHEMA: params.get(CONFIG_FIELDS.SF_OBJECT_SCHEMA),
             CONFIG_FIELDS.SF_OBJECTS: params.get(CONFIG_FIELDS.SF_OBJECTS)
         }
@@ -191,8 +190,14 @@ class salesforceManager(ThreePBase):
         :param params: parameters sent by frontend as a json dictionary
         :return: dict in the form : {field_key:{property_key:property_value}}
         """
-
-        return {}
+        
+        selected_sf_object = _.get_(params, CONFIG_FIELDS.SF_OBJECTS)
+        sf_object_schema = [
+            {"name" : "field_1", "value": "field_1", "isRelationship": True, "type" : "Text"}
+        ]
+        to_return = {}
+        _.set_(to_return, "ux.attributes.sf_object_schema.items", sf_object_schema)
+        return to_return
 
     def is_connection_valid(self, identity_config, ds_config=None):
         """
