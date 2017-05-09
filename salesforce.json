@@ -4,7 +4,7 @@
     "USER_INPUT_JSON": {
         "capability": {
             "ds_config_validation_mode": "AUTO", 
-            "preview_enabled": true, 
+            "preview_enabled": false, 
             "minimum_schedule_frequency": 0, 
             "config_validation_required": false, 
             "schedule_type": "MOMENT"
