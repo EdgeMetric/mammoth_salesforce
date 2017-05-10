@@ -4,13 +4,13 @@
     "USER_INPUT_JSON": {
         "capability": {
             "ds_config_validation_mode": "AUTO", 
-            "preview_enabled": false, 
+            "preview_enabled": false,
             "minimum_schedule_frequency": 0, 
-            "config_validation_required": false, 
+            "config_validation_required": false,
             "schedule_type": "MOMENT"
         }, 
         "fields": {
-           
+
             "sf_object_schema": {
                 "long_desc": "", 
                 "server_auto_suggest": false, 
@@ -42,20 +42,21 @@
         }, 
         "ux": {
             "attributes": {
-                
+
                 "sf_object_schema": {
-                    "items": null, 
+                    "items": [],
                     "ui_type": "", 
-                    "onChange": "", 
+                    "onChange": "",
                     "list_type": "DYNAMIC", 
-                    "size": null
-                }, 
+                    "size": 3,
+                    "hidden_field": "!model.sf_objects"
+                },
                 "sf_objects": {
                     "items": null, 
-                    "ui_type": "", 
-                    "onChange": "", 
-                    "list_type": "DYNAMIC", 
-                    "size": null
+                    "ui_type": "custom_select",
+                    "onChange": "augmentDsConfig",
+                    "list_type": "DYNAMIC",
+                    "size": 3
                 }
             }, 
             "edit_layout": [], 
@@ -73,7 +74,7 @@
                     "width": {
                         "value": "100", 
                         "unit": "%"
-                    }, 
+                    },
                     "classes": "", 
                     "type": "field", 
                     "key": "sf_object_schema"

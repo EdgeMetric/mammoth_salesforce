@@ -30,13 +30,7 @@ class salesforceManager(ThreePBase):
         
         self.config_file = "/".join([os.path.dirname(__file__), const.CONFIG_FILE])
         super(salesforceManager, self).__init__(storage_handle, api_config)
-    
-    def get_auth_object(self):
-        """
-        Provides the auth object for the salesforce class
-        """
-        
-        return None
+
 
     def get_identity_spec(self, auth_spec):
         """
@@ -68,7 +62,7 @@ class salesforceManager(ThreePBase):
             identity_config[COMMON_IDENTITY_FIELDS.NAME] = params.get(
                 COMMON_IDENTITY_FIELDS.NAME)
         else:
-            identity_config[sdkconst.COMMON_IDENTITY_FIELDS.NAME] = "unspecified_name"
+            identity_config[sdkconst.COMMON_IDENTITY_FIELDS.NAME] = params.get(const.IDENTITY_FIELDS.USERNAME)
         return identity_config
 
     def validate_identity_config(self, identity_config):
@@ -107,13 +101,6 @@ class salesforceManager(ThreePBase):
                                        sdkconst.FIELD_IDS.NAME)
         return formatted_list
 
-    def get_identity(self, identity):
-        """
-            :param identity: identity object
-            :return: identity object
-            any runtime updates  to identity object can be made here
-            """
-        return identity
 
     def delete_identity(self, identity_config):
         """
@@ -137,7 +124,11 @@ class salesforceManager(ThreePBase):
             Any dynamic changes to ds_config_spec, if required, should be made here.
         """
         _.set_(ds_config_spec, 'ux.attributes.sf_objects.items', [
-          {"name": "module_1", "value": "module_1"}
+            {"name": "module 1", "value": "module_1"},
+            {"name": "module 2", "value": "module_2"},
+            {"name": "module 3", "value": "module_3"},
+            {"name": "module 4", "value": "module_4"},
+            {"name": "module 5", "value": "module_5"}
         ])
         return ds_config_spec
 
@@ -184,20 +175,6 @@ class salesforceManager(ThreePBase):
         formatted_list = make_kv_list(ds_config_list, sdkconst.VALUE, sdkconst.NAME)
         return formatted_list
 
-    def augment_ds_config(self, params):
-        """
-        :param self:
-        :param params: parameters sent by frontend as a json dictionary
-        :return: dict in the form : {field_key:{property_key:property_value}}
-        """
-        
-        selected_sf_object = _.get_(params, CONFIG_FIELDS.SF_OBJECTS)
-        sf_object_schema = [
-            {"name" : "field_1", "value": "field_1", "isRelationship": True, "type" : "Text"}
-        ]
-        to_return = {}
-        _.set_(to_return, "ux.attributes.sf_object_schema.items", sf_object_schema)
-        return to_return
 
     def is_connection_valid(self, identity_config, ds_config=None):
         """
@@ -267,7 +244,7 @@ class salesforceManager(ThreePBase):
         """
         return ds_config
 
-    def augment_ds_config_spec(self, params, identity_config):
+    def augment_ds_config_spec(self, identity_config, params):
         """
             :param params: dict object containing subset ds_config parameters
             :param identity_config:
@@ -275,7 +252,21 @@ class salesforceManager(ThreePBase):
             this method is used to update/augment ds_config_spec with some dynamic
             information based on inputs received
         """
-        return {}
+        selected_sf_object = _.get(params, CONFIG_FIELDS.SF_OBJECTS)
+        sf_object_schema = [
+            {"name": "field 1", "value": "field_1"},
+            {"name": "field 2", "value": "field_2"},
+            {"name": "field 3", "value": "field_3"}
+        ]
+        to_return = {}
+        _.set_(to_return, "ux.attributes.sf_object_schema.items",
+               sf_object_schema)
+
+        # Example of how can you play around json spec to customised UI based on user inputs
+
+        _.set_(to_return, "fields.sf_object_schema.label",
+               "Select {0}'s schema: ".format(selected_sf_object))
+        return to_return
 
     def update_ds_config(self, ds_config, params):
         """
