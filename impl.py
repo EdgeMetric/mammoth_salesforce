@@ -10,7 +10,9 @@ from sdk.const import COMMON_CONFIG_FIELDS, \
 from const import CONFIG_FIELDS, IDENTITY_FIELDS
 from threep.base import ThreePBase
 from sdk.utils import get_key_value_label, make_kv_list
-import pydash as _
+from pydash import py_ as _
+from simple_salesforce import Salesforce
+
 
 # Insert your import statements here
 from runtime_import.libs.salesforce.util import salesforceDataYielder
@@ -29,6 +31,7 @@ class salesforceManager(ThreePBase):
     def __init__(self, storage_handle, api_config):
         
         self.config_file = "/".join([os.path.dirname(__file__), const.CONFIG_FILE])
+        self.sf = Salesforce(username="ayush@mindgrep.com",password="Rakkar176057",security_token="ydVAiiVUeaFXzGJnc8cP2jmH")
         super(salesforceManager, self).__init__(storage_handle, api_config)
 
 
@@ -123,14 +126,49 @@ class salesforceManager(ThreePBase):
             :return:  ds_config_spec.
             Any dynamic changes to ds_config_spec, if required, should be made here.
         """
-        _.set_(ds_config_spec, 'ux.attributes.sf_objects.items', [
-            {"name": "module 1", "value": "module_1"},
-            {"name": "module 2", "value": "module_2"},
-            {"name": "module 3", "value": "module_3"},
-            {"name": "module 4", "value": "module_4"},
-            {"name": "module 5", "value": "module_5"}
-        ])
+
+        sf_objects = self.sf.describe()["sobjects"]
+
+        #List of all sf objects, name value pairs
+        sf_objects_json = _(sf_objects)
+
+        #Filter out the objects which are not retieveable
+        sf_objects_json = sf_objects_json.filter_(lambda sf_object: sf_object['retrieveable']) 
+
+        #retrieve the {name, value} tuples for the objects
+        sf_objects_json = sf_objects_json.map_(lambda sf_object: {"name": str(sf_object['label']), "value": str(sf_object['name'])})
+
+        sf_objects_json = sf_objects_json.value()
+
+        #sf_objects_json = [_.head(sf_objects_json), _.last(sf_objects_json)]
+        
+        #Set it in the spec to return
+        _.set_(ds_config_spec, 'ux.attributes.sf_objects.items', sf_objects_json)
+
+        first_object_name = _.head(sf_objects_json)['value']
+        first_object_schema = getattr(self.sf, first_object_name).describe()
+
+        self.set_schema_items(ds_config_spec, first_object_schema)
+
         return ds_config_spec
+
+    def set_schema_items (self, ds_config_spec, object_schema):
+        for field in object_schema['fields']:
+          field['value'] = field['name']
+
+        for relation in object_schema['childRelationships']:
+          relation['value'] = relation['field']
+          relation['name'] = relation['field']
+          relation['isRelationship'] = True
+
+        fields = object_schema['childRelationships'] + object_schema['fields']
+
+        #pick name, value pairs
+        fields = _(fields).map_(lambda field: {"name": str(field['name']), "value": str(field['name'])}).value()
+
+        _.set_(ds_config_spec, "ux.attributes.sf_object_schema.items", fields)
+
+        print 'returning fields', _.get(ds_config_spec, "ux.attributes.sf_object_schema.items"), 'fields' 
 
     def get_ds_config_for_storage(self, params=None):
         """
@@ -253,14 +291,13 @@ class salesforceManager(ThreePBase):
             information based on inputs received
         """
         selected_sf_object = _.get(params, CONFIG_FIELDS.SF_OBJECTS)
-        sf_object_schema = [
-            {"name": "field 1", "value": "field_1"},
-            {"name": "field 2", "value": "field_2"},
-            {"name": "field 3", "value": "field_3"}
-        ]
+        sf_object_schema = getattr(self.sf, selected_sf_object).describe()
+
         to_return = {}
+
+        self.set_schema_items(to_return, sf_object_schema)
         _.set_(to_return, "ux.attributes.sf_object_schema.items",
-               sf_object_schema)
+               sf_object_schema['fields'] + sf_object_schema['childRelationships'])
 
         # Example of how can you play around json spec to customised UI based on user inputs
 

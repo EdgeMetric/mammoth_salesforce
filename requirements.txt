@@ -1,1 +1,3 @@
+simple_salesforce
+salesforce_bulk
 pydash
