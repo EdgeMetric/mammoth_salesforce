@@ -41,7 +41,6 @@ class salesforceDataYielder(DataYielder):
         """
         sf_object = str(self.ds_config[CONFIG_FIELDS.SF_OBJECTS])
         fields = self.ds_config[CONFIG_FIELDS.SF_OBJECT_SCHEMA]
-        print 'ds_configggggggggggggggggggggggggggggggggggggggggggggggggggg', self.ds_config, fields, sf_object
         fields = map(lambda field: str(field), fields)
         query_string = "select " + ",".join(fields) + " from " + sf_object 
 
@@ -50,7 +49,7 @@ class salesforceDataYielder(DataYielder):
         bulk = SalesforceBulk(sessionId=sf.session_id, host=sf.sf_instance)
 
         job = bulk.create_query_job(sf_object, contentType='CSV')
-        batch = bulk.query(job, 'select AccountId from Account')
+        batch = bulk.query(job, query_string)
 
         bulk.wait_for_batch(job, batch)
         for row in bulk.get_batch_result_iter(job, batch, parse_csv=True):

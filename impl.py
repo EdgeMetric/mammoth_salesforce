@@ -12,6 +12,9 @@ from threep.base import ThreePBase
 from sdk.utils import get_key_value_label, make_kv_list
 from pydash import py_ as _
 from simple_salesforce import Salesforce
+#Objects not supported by bulk query. These are meta objects
+
+NON_BULK_OBJECTS = ['DeclinedEventRelation', 'AcceptedEventRelation', 'CaseStatus', 'ContractStatus', 'KnowledgeArticle', 'KnowledgeArticleVersion', 'KnowledgeArticleVersionHistory', 'KnowledgeArticleViewStat', 'KnowledgeArticleVoteStat', 'LeadStatus', 'OpportunityStage', 'PartnerRole', 'RecentlyViewed', 'SolutionStatus', 'TaskPriority', 'UserRecordAccess']
 
 
 # Insert your import statements here
@@ -133,14 +136,17 @@ class salesforceManager(ThreePBase):
         sf_objects_json = _(sf_objects)
 
         #Filter out the objects which are not retieveable
-        sf_objects_json = sf_objects_json.filter_(lambda sf_object: sf_object['retrieveable']) 
+        sf_objects_json = sf_objects_json.filter_(lambda sf_object: sf_object['retrieveable'])
 
         #retrieve the {name, value} tuples for the objects
         sf_objects_json = sf_objects_json.map_(lambda sf_object: {"name": str(sf_object['label']), "value": str(sf_object['name'])})
 
+        #Filter out the objects which can not be fetched in bulk
+        sf_objects_json = sf_objects_json.filter_(lambda sf_object: sf_object['name'] not in NON_BULK_OBJECTS)
+
         sf_objects_json = sf_objects_json.value()
 
-        #sf_objects_json = [_.head(sf_objects_json), _.last(sf_objects_json)]
+        sf_objects_json = [sf_objects_json[1]]
         
         #Set it in the spec to return
         _.set_(ds_config_spec, 'ux.attributes.sf_objects.items', sf_objects_json)
@@ -156,15 +162,11 @@ class salesforceManager(ThreePBase):
         for field in object_schema['fields']:
           field['value'] = field['name']
 
-        for relation in object_schema['childRelationships']:
-          relation['value'] = relation['field']
-          relation['name'] = relation['field']
-          relation['isRelationship'] = True
-
-        fields = object_schema['childRelationships'] + object_schema['fields']
-
         #pick name, value pairs
-        fields = _(fields).map_(lambda field: {"name": str(field['name']), "value": str(field['name'])}).value()
+        fields = object_schema['fields']
+        fields = _(fields).map_(lambda field: {"name": str(field['name']), "value": str(field['name']), "relationshipName": str(field['relationshipName']), "referenceTo": field['referenceTo']}).value()
+
+        fields = [fields[1], fields[2], fields[3], fields[4]]
 
         _.set_(ds_config_spec, "ux.attributes.sf_object_schema.items", fields)
 
@@ -296,8 +298,7 @@ class salesforceManager(ThreePBase):
         to_return = {}
 
         self.set_schema_items(to_return, sf_object_schema)
-        _.set_(to_return, "ux.attributes.sf_object_schema.items",
-               sf_object_schema['fields'] + sf_object_schema['childRelationships'])
+        _.set_(to_return, "ux.attributes.sf_object_schema.items", sf_object_schema['fields'])
 
         # Example of how can you play around json spec to customised UI based on user inputs
 
