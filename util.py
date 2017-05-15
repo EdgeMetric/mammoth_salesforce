@@ -1,8 +1,11 @@
 # encoding: utf-8
 import logging
 import const
+from const import CONFIG_FIELDS
 import sdk.const as sdkconst
 from threep.base import DataYielder
+from simple_salesforce import Salesforce
+from salesforce_bulk import SalesforceBulk
 
 log = logging
 
@@ -36,6 +39,23 @@ class salesforceDataYielder(DataYielder):
             :return: dict object mentioning csv download status, success/failure
             TODO: return dict format to be standardized
         """
+        sf_object = str(self.ds_config[CONFIG_FIELDS.SF_OBJECTS])
+        fields = self.ds_config[CONFIG_FIELDS.SF_OBJECT_SCHEMA]
+        print 'ds_configggggggggggggggggggggggggggggggggggggggggggggggggggg', self.ds_config, fields, sf_object
+        fields = map(lambda field: str(field), fields)
+        query_string = "select " + ",".join(fields) + " from " + sf_object 
+
+        #TODO use OAUTH2 token
+        sf = Salesforce(username="ayush@mindgrep.com",password="Rakkar176057",security_token="ydVAiiVUeaFXzGJnc8cP2jmH")
+        bulk = SalesforceBulk(sessionId=sf.session_id, host=sf.sf_instance)
+
+        job = bulk.create_query_job(sf_object, contentType='CSV')
+        batch = bulk.query(job, 'select AccountId from Account')
+
+        bulk.wait_for_batch(job, batch)
+        for row in bulk.get_batch_result_iter(job, batch, parse_csv=True):
+          print row   #row is a dict
+        bulk.close_job(job)
         return {}
 
     def _setup(self):
