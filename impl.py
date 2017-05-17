@@ -146,7 +146,7 @@ class salesforceManager(ThreePBase):
 
         sf_objects_json = sf_objects_json.value()
 
-        sf_objects_json = [sf_objects_json[1]]
+        #sf_objects_json = [sf_objects_json[1]]
         
         #Set it in the spec to return
         _.set_(ds_config_spec, 'ux.attributes.sf_objects.items', sf_objects_json)
@@ -164,9 +164,19 @@ class salesforceManager(ThreePBase):
 
         #pick name, value pairs
         fields = object_schema['fields']
-        fields = _(fields).map_(lambda field: {"name": str(field['name']), "value": str(field['name']), "relationshipName": str(field['relationshipName']), "referenceTo": field['referenceTo']}).value()
 
-        fields = [fields[1], fields[2], fields[3], fields[4]]
+        #Filter out the relationships
+        #TODO allow relationship handling in frontend. Then we will not filter out relationships here
+        fields = _(fields).filter_(lambda field: field['relationshipName'] is None)
+
+        fields = fields.map_(lambda field: {
+          "name": str(field['name']), 
+          "value": str(field['name']), 
+          "relationshipName": str(field['relationshipName']), 
+          "referenceTo": field['referenceTo']
+        }).value()
+
+        #fields = [fields[1], fields[2], fields[3], fields[4]]
 
         _.set_(ds_config_spec, "ux.attributes.sf_object_schema.items", fields)
 

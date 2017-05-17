@@ -1,11 +1,13 @@
 # encoding: utf-8
 import logging
 import const
+import csv
 from const import CONFIG_FIELDS
 import sdk.const as sdkconst
 from threep.base import DataYielder
 from simple_salesforce import Salesforce
 from salesforce_bulk import SalesforceBulk
+from pydash import py_ as _
 
 log = logging
 
@@ -52,8 +54,14 @@ class salesforceDataYielder(DataYielder):
         batch = bulk.query(job, query_string)
 
         bulk.wait_for_batch(job, batch)
+        target = open(file_path, 'wb')
+        headers = None
+        writer = csv.writer(target, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
         for row in bulk.get_batch_result_iter(job, batch, parse_csv=True):
-          print row   #row is a dict
+          if headers is None:
+            headers = _.keys(row)
+            writer.writerow(headers)
+          writer.writerow(_.values(row))
         bulk.close_job(job)
         return {}
 
