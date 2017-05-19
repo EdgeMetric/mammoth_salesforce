@@ -107,7 +107,6 @@ class salesforceManager(ThreePBase):
                                        sdkconst.FIELD_IDS.NAME)
         return formatted_list
 
-
     def delete_identity(self, identity_config):
         """
             put all the logic here you need before identity deletion and
@@ -154,6 +153,8 @@ class salesforceManager(ThreePBase):
         first_object_name = _.head(sf_objects_json)['value']
         first_object_schema = getattr(self.sf, first_object_name).describe()
 
+        _.set_(ds_config_spec, 'fields.sf_objects.default_value',
+               first_object_name)
         self.set_schema_items(ds_config_spec, first_object_schema)
 
         return ds_config_spec
@@ -170,17 +171,19 @@ class salesforceManager(ThreePBase):
         fields = _(fields).filter_(lambda field: field['relationshipName'] is None)
 
         fields = fields.map_(lambda field: {
-          "name": str(field['name']), 
-          "value": str(field['name']), 
-          "relationshipName": str(field['relationshipName']), 
-          "referenceTo": field['referenceTo']
+            "name": str(field['name']),
+            "value": str(field['name']),
+            "selected": True,
+            "relationshipName": str(field['relationshipName']),
+            "referenceTo": field['referenceTo']
         }).value()
+
 
         #fields = [fields[1], fields[2], fields[3], fields[4]]
 
         _.set_(ds_config_spec, "ux.attributes.sf_object_schema.items", fields)
 
-        print 'returning fields', _.get(ds_config_spec, "ux.attributes.sf_object_schema.items"), 'fields' 
+        # print 'returning fields', _.get(ds_config_spec, "ux.attributes.sf_object_schema.items"), 'fields'
 
     def get_ds_config_for_storage(self, params=None):
         """
@@ -308,7 +311,7 @@ class salesforceManager(ThreePBase):
         to_return = {}
 
         self.set_schema_items(to_return, sf_object_schema)
-        _.set_(to_return, "ux.attributes.sf_object_schema.items", sf_object_schema['fields'])
+        # _.set_(to_return, "ux.attributes.sf_object_schema.items", sf_object_schema['fields'])
 
         # Example of how can you play around json spec to customised UI based on user inputs
 

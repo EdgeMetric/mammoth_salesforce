@@ -62,22 +62,34 @@
             "edit_layout": [], 
             "layout": [
                 {
-                    "width": {
-                        "value": "100", 
-                        "unit": "%"
-                    }, 
-                    "classes": "", 
-                    "type": "field", 
-                    "key": "sf_objects"
+                    "type": "row",
+                    "classes": "left-section",
+                    "items": [
+                        {
+                            "width": {
+                                "value": "100",
+                                "unit": "%"
+                            },
+                            "classes": "",
+                            "type": "field",
+                            "key": "sf_objects"
+                        }
+                    ]
                 },
                 {
-                    "width": {
-                        "value": "100", 
-                        "unit": "%"
-                    },
-                    "classes": "", 
-                    "type": "field", 
-                    "key": "sf_object_schema"
+                    "type": "row",
+                    "classes": "right-section",
+                    "items": [
+                        {
+                            "width": {
+                                "value": "100",
+                                "unit": "%"
+                            },
+                            "classes": "",
+                            "type": "field",
+                            "key": "sf_object_schema"
+                        }
+                    ]
                 }
             ]
         }
