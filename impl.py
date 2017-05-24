@@ -1,4 +1,4 @@
-__author__ = ''
+c__author__ = ''
 
 import os
 import const
@@ -141,11 +141,11 @@ class salesforceManager(ThreePBase):
         sf_objects_json = sf_objects_json.map_(lambda sf_object: {"name": str(sf_object['label']), "value": str(sf_object['name'])})
 
         #Filter out the objects which can not be fetched in bulk
-        sf_objects_json = sf_objects_json.filter_(lambda sf_object: sf_object['name'] not in NON_BULK_OBJECTS)
+        sf_objects_json = sf_objects_json.filter_(lambda sf_object: str(sf_object['value']) not in NON_BULK_OBJECTS)
 
         sf_objects_json = sf_objects_json.value()
 
-        #sf_objects_json = [sf_objects_json[1]]
+        #sf_objects_json = [sf_objects_json[1], sf_objects_json[2]]
         
         #Set it in the spec to return
         _.set_(ds_config_spec, 'ux.attributes.sf_objects.items', sf_objects_json)
@@ -171,19 +171,15 @@ class salesforceManager(ThreePBase):
         fields = _(fields).filter_(lambda field: field['relationshipName'] is None)
 
         fields = fields.map_(lambda field: {
-            "name": str(field['name']),
+            "name": str(field['label']),
             "value": str(field['name']),
             "selected": True,
-            "relationshipName": str(field['relationshipName']),
-            "referenceTo": field['referenceTo']
+            #"type": field['type'],
+            #"relationshipName": str(field['relationshipName']),
+            #"referenceTo": field['referenceTo']
         }).value()
 
-
-        #fields = [fields[1], fields[2], fields[3], fields[4]]
-
         _.set_(ds_config_spec, "ux.attributes.sf_object_schema.items", fields)
-
-        # print 'returning fields', _.get(ds_config_spec, "ux.attributes.sf_object_schema.items"), 'fields'
 
     def get_ds_config_for_storage(self, params=None):
         """
@@ -195,9 +191,14 @@ class salesforceManager(ThreePBase):
         
         """
 
+        sf_object = params.get(CONFIG_FIELDS.SF_OBJECTS)
+        sf_object_schema = getattr(self.sf, sf_object).describe()
+        fields = sf_object_schema['fields'] 
+        
         ds_config = {
+            CONFIG_FIELDS.SF_OBJECTS: sf_object,
             CONFIG_FIELDS.SF_OBJECT_SCHEMA: params.get(CONFIG_FIELDS.SF_OBJECT_SCHEMA),
-            CONFIG_FIELDS.SF_OBJECTS: params.get(CONFIG_FIELDS.SF_OBJECTS)
+            "sf_fields": sf_object_schema['fields'] 
         }
 
         return ds_config
@@ -307,17 +308,18 @@ class salesforceManager(ThreePBase):
         """
         selected_sf_object = _.get(params, CONFIG_FIELDS.SF_OBJECTS)
         sf_object_schema = getattr(self.sf, selected_sf_object).describe()
+        
 
-        to_return = {}
+        new_ds_config = {}
 
-        self.set_schema_items(to_return, sf_object_schema)
-        # _.set_(to_return, "ux.attributes.sf_object_schema.items", sf_object_schema['fields'])
+        self.set_schema_items(new_ds_config, sf_object_schema)
+        print  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaugmenting ds config for sf objecct', selected_sf_object, 'with fields', _.get(new_ds_config, "ux.attributes.sf_object_schema.items")
 
         # Example of how can you play around json spec to customised UI based on user inputs
 
-        _.set_(to_return, "fields.sf_object_schema.label",
+        _.set_(new_ds_config, "fields.sf_object_schema.label",
                "Select {0}'s schema: ".format(selected_sf_object))
-        return to_return
+        return new_ds_config
 
     def update_ds_config(self, ds_config, params):
         """

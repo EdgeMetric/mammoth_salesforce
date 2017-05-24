@@ -46,6 +46,8 @@ class salesforceDataYielder(DataYielder):
         fields = map(lambda field: str(field), fields)
         query_string = "select " + ",".join(fields) + " from " + sf_object 
 
+        print 'iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiquerying sf object', sf_object, query_string
+
         #TODO use OAUTH2 token
         sf = Salesforce(username="ayush@mindgrep.com",password="Rakkar176057",security_token="ydVAiiVUeaFXzGJnc8cP2jmH")
         bulk = SalesforceBulk(sessionId=sf.session_id, host=sf.sf_instance)
@@ -60,6 +62,7 @@ class salesforceDataYielder(DataYielder):
         for row in bulk.get_batch_result_iter(job, batch, parse_csv=True):
           if headers is None:
             headers = _.keys(row)
+            self.ds_config['headers'] = headers
             writer.writerow(headers)
           writer.writerow(_.values(row))
         bulk.close_job(job)
@@ -95,4 +98,40 @@ class salesforceDataYielder(DataYielder):
                     'type': COLUMN DATATYPE -  TEXT/DATE/NUMERIC
                }
         """
-        return {}
+        sf_fields = self.ds_config['sf_fields']
+        ui_fields_meta = map(lambda field: {
+            'internal_name': str(field), 
+            'display_name': self.get_field_label(str(field), sf_fields), 
+            'type': self.get_field_type(field, sf_fields)
+          }, self.ds_config['headers'])
+
+        return ui_fields_meta 
+  
+    def get_field_label(self, field_name, sf_fields):
+      for field in sf_fields:
+        if str(field['name']) == field_name:
+          return field['label']
+      raise Exception('field_name not in sf fields ' + field_name)
+
+    def get_field_type(self, field_name, sf_fields):
+      sf_field = None
+      for field in sf_fields:
+        if field['name'] == field_name:
+          sf_field = field
+          break
+
+      if sf_field is None:
+        raise Exception('field_name not in sf fields ' + field_name)
+      
+      field_soap_type = field['soapType'].lower()
+
+      if 'date' in field_soap_type:
+        return 'DATE'
+      elif 'time' in field_soap_type:
+        return 'DATE'
+      elif 'double' in field_soap_type:
+        return 'NUMERIC'
+      elif 'int' in field_soap_type:
+        return 'NUMERIC'
+      else:
+        return 'TEXT'
