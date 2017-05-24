@@ -138,10 +138,10 @@ class salesforceManager(ThreePBase):
         sf_objects_json = sf_objects_json.filter_(lambda sf_object: sf_object['retrieveable'])
 
         #retrieve the {name, value} tuples for the objects
-        sf_objects_json = sf_objects_json.map_(lambda sf_object: {"name": str(sf_object['label']), "value": str(sf_object['name'])})
+        sf_objects_json = sf_objects_json.map_(lambda sf_object: {"name": sf_object['label'].encode('utf-8'), "value": sf_object['name'].encode('utf-8')})
 
         #Filter out the objects which can not be fetched in bulk
-        sf_objects_json = sf_objects_json.filter_(lambda sf_object: str(sf_object['value']) not in NON_BULK_OBJECTS)
+        sf_objects_json = sf_objects_json.filter_(lambda sf_object: sf_object['value'].encode('utf-8') not in NON_BULK_OBJECTS)
 
         sf_objects_json = sf_objects_json.value()
 
@@ -170,12 +170,13 @@ class salesforceManager(ThreePBase):
         #TODO allow relationship handling in frontend. Then we will not filter out relationships here
         fields = _(fields).filter_(lambda field: field['relationshipName'] is None)
 
+        #print 'setting schema itemsssssssssssssssssssss', map(lambda f: f['label'],fields.value())
         fields = fields.map_(lambda field: {
-            "name": str(field['label']),
-            "value": str(field['name']),
+            "name": field['label'].encode('utf-8'),
+            "value": field['name'].encode('utf-8'),
             "selected": True,
             #"type": field['type'],
-            #"relationshipName": str(field['relationshipName']),
+            #"relationshipName": field['relationshipName'].encode('utf-8'),
             #"referenceTo": field['referenceTo']
         }).value()
 

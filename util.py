@@ -41,9 +41,9 @@ class salesforceDataYielder(DataYielder):
             :return: dict object mentioning csv download status, success/failure
             TODO: return dict format to be standardized
         """
-        sf_object = str(self.ds_config[CONFIG_FIELDS.SF_OBJECTS])
+        sf_object = self.ds_config[CONFIG_FIELDS.SF_OBJECTS].encode('utf-8')
         fields = self.ds_config[CONFIG_FIELDS.SF_OBJECT_SCHEMA]
-        fields = map(lambda field: str(field), fields)
+        fields = map(lambda field: field.encode('utf-8'), fields)
         query_string = "select " + ",".join(fields) + " from " + sf_object 
 
         print 'iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiquerying sf object', sf_object, query_string
@@ -100,8 +100,8 @@ class salesforceDataYielder(DataYielder):
         """
         sf_fields = self.ds_config['sf_fields']
         ui_fields_meta = map(lambda field: {
-            'internal_name': str(field), 
-            'display_name': self.get_field_label(str(field), sf_fields), 
+            'internal_name': field.encode('utf-8'), 
+            'display_name': self.get_field_label(field.encode('utf-8'), sf_fields), 
             'type': self.get_field_type(field, sf_fields)
           }, self.ds_config['headers'])
 
@@ -109,7 +109,7 @@ class salesforceDataYielder(DataYielder):
   
     def get_field_label(self, field_name, sf_fields):
       for field in sf_fields:
-        if str(field['name']) == field_name:
+        if field['name'].encode('utf-8') == field_name:
           return field['label']
       raise Exception('field_name not in sf fields ' + field_name)
 
