@@ -153,8 +153,8 @@ class salesforceManager(ThreePBase):
         first_object_name = _.head(sf_objects_json)['value']
         first_object_schema = getattr(self.sf, first_object_name).describe()
 
-        _.set_(ds_config_spec, 'fields.sf_objects.default_value',
-               first_object_name)
+        _.set_(ds_config_spec, 'fields.sf_objects.default_value', first_object_name)
+
         self.set_schema_items(ds_config_spec, first_object_schema)
 
         return ds_config_spec
@@ -314,7 +314,7 @@ class salesforceManager(ThreePBase):
         new_ds_config = {}
 
         self.set_schema_items(new_ds_config, sf_object_schema)
-        print  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaugmenting ds config for sf objecct', selected_sf_object, 'with fields', _.get(new_ds_config, "ux.attributes.sf_object_schema.items")
+        #print  'augmenting ds config for sf objecct', selected_sf_object, 'with fields', _.get(new_ds_config, "ux.attributes.sf_object_schema.items")
 
         # Example of how can you play around json spec to customised UI based on user inputs
 

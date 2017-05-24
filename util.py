@@ -46,7 +46,7 @@ class salesforceDataYielder(DataYielder):
         fields = map(lambda field: field.encode('utf-8'), fields)
         query_string = "select " + ",".join(fields) + " from " + sf_object 
 
-        print 'iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiquerying sf object', sf_object, query_string
+        #print 'querying sf object', sf_object, query_string
 
         #TODO use OAUTH2 token
         sf = Salesforce(username="ayush@mindgrep.com",password="Rakkar176057",security_token="ydVAiiVUeaFXzGJnc8cP2jmH")
@@ -57,16 +57,20 @@ class salesforceDataYielder(DataYielder):
 
         bulk.wait_for_batch(job, batch)
         target = open(file_path, 'wb')
-        headers = None
         writer = csv.writer(target, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
-        for row in bulk.get_batch_result_iter(job, batch, parse_csv=True):
-          if headers is None:
-            headers = _.keys(row)
-            self.ds_config['headers'] = headers
-            writer.writerow(headers)
-          writer.writerow(_.values(row))
+
+        writer.writerow(fields)
+        for row_dict in bulk.get_batch_result_iter(job, batch, parse_csv=True):
+          row = self.values_for_keys(row_dict, fields)
+          writer.writerow(row)
         bulk.close_job(job)
         return {}
+
+    def values_for_keys(self, dict, keys):
+      values = []
+      for key in keys:
+        values.append(dict[key])
+      return values
 
     def _setup(self):
         """
@@ -98,14 +102,15 @@ class salesforceDataYielder(DataYielder):
                     'type': COLUMN DATATYPE -  TEXT/DATE/NUMERIC
                }
         """
-        sf_fields = self.ds_config['sf_fields']
-        ui_fields_meta = map(lambda field: {
+        all_schema_fields = self.ds_config['sf_fields']
+        selected_fields = self.ds_config[CONFIG_FIELDS.SF_OBJECT_SCHEMA]
+        selected_fields_meta = map(lambda field: {
             'internal_name': field, 
-            'display_name': self.get_field_label(field, sf_fields), 
-            'type': self.get_field_type(field, sf_fields)
-          }, self.ds_config['headers'])
+            'display_name': self.get_field_label(field, all_schema_fields), 
+            'type': self.get_field_type(field, all_schema_fields)
+          }, selected_fields)
 
-        return ui_fields_meta 
+        return selected_fields_meta 
   
     def get_field_label(self, field_name, sf_fields):
       for field in sf_fields:
