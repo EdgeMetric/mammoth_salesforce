@@ -138,10 +138,10 @@ class salesforceManager(ThreePBase):
         sf_objects_json = sf_objects_json.filter_(lambda sf_object: sf_object['retrieveable'])
 
         #retrieve the {name, value} tuples for the objects
-        sf_objects_json = sf_objects_json.map_(lambda sf_object: {"name": sf_object['label'].encode('utf-8'), "value": sf_object['name'].encode('utf-8')})
+        sf_objects_json = sf_objects_json.map_(lambda sf_object: {"name": sf_object['label'], "value": sf_object['name']})
 
         #Filter out the objects which can not be fetched in bulk
-        sf_objects_json = sf_objects_json.filter_(lambda sf_object: sf_object['value'].encode('utf-8') not in NON_BULK_OBJECTS)
+        sf_objects_json = sf_objects_json.filter_(lambda sf_object: sf_object['value'] not in NON_BULK_OBJECTS)
 
         sf_objects_json = sf_objects_json.value()
 
@@ -172,8 +172,8 @@ class salesforceManager(ThreePBase):
 
         #print 'setting schema itemsssssssssssssssssssss', map(lambda f: f['label'],fields.value())
         fields = fields.map_(lambda field: {
-            "name": field['label'].encode('utf-8'),
-            "value": field['name'].encode('utf-8'),
+            "name": field['label'],
+            "value": field['name'],
             "selected": True,
             #"type": field['type'],
             #"relationshipName": field['relationshipName'].encode('utf-8'),
