@@ -1,6 +1,6 @@
 {
     "module_name": "SalesForce", 
-    "module_type": "rdbms", 
+    "module_type": "salesforce",
     "USER_INPUT_JSON": {
         "capability": {
             "ds_config_validation_mode": "AUTO", 
@@ -54,7 +54,7 @@
                 "sf_objects": {
                     "items": null, 
                     "ui_type": "custom_select",
-                    "onChange": "augmentDsConfig",
+                    "onChange": "get_sf_object_schema",
                     "list_type": "DYNAMIC",
                     "size": 3
                 }

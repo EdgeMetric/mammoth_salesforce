@@ -44,7 +44,7 @@ class salesforceDataYielder(DataYielder):
         sf_object = self.ds_config[CONFIG_FIELDS.SF_OBJECTS]
         fields = self.ds_config[CONFIG_FIELDS.SF_OBJECT_SCHEMA]
         fields = map(lambda field: field.encode('utf-8'), fields)
-        query_string = "select " + ",".join(fields) + " from " + sf_object 
+        query_string = "select " + ",".join(fields) + " from " + sf_object
 
         #print 'querying sf object', sf_object, query_string
 
@@ -105,13 +105,13 @@ class salesforceDataYielder(DataYielder):
         all_schema_fields = self.ds_config['sf_fields']
         selected_fields = self.ds_config[CONFIG_FIELDS.SF_OBJECT_SCHEMA]
         selected_fields_meta = map(lambda field: {
-            'internal_name': field, 
-            'display_name': self.get_field_label(field, all_schema_fields), 
+            'internal_name': "sf_{0}".format(field.lower()),
+            'display_name': self.get_field_label(field, all_schema_fields),
             'type': self.get_field_type(field, all_schema_fields)
           }, selected_fields)
 
-        return selected_fields_meta 
-  
+        return selected_fields_meta
+
     def get_field_label(self, field_name, sf_fields):
       for field in sf_fields:
         if field['name'] == field_name:
@@ -127,7 +127,7 @@ class salesforceDataYielder(DataYielder):
 
       if sf_field is None:
         raise Exception('field_name not in sf fields ' + field_name)
-      
+
       field_soap_type = field['soapType'].lower()
 
       if 'date' in field_soap_type:
