@@ -3,6 +3,7 @@ c__author__ = ''
 import os
 import const
 import json
+import urllib2
 import  logging as log
 import sdk.const as sdkconst
 from sdk.const import COMMON_CONFIG_FIELDS, \
@@ -35,6 +36,8 @@ class salesforceManager(ThreePBase):
         
         self.config_file = "/".join([os.path.dirname(__file__), const.CONFIG_FILE])
         self.sf = Salesforce(username="ayush@mindgrep.com",password="Rakkar176057",security_token="ydVAiiVUeaFXzGJnc8cP2jmH")
+        self.api_config = api_config
+        self.storage_handle = storage_handle
         super(salesforceManager, self).__init__(storage_handle, api_config)
 
 
@@ -45,6 +48,15 @@ class salesforceManager(ThreePBase):
 
         In the simplest case just return the provided auth_spec parameter.
         """
+
+        sf_oauth_url = self.api_config.get("oauth2_code_url")
+        client_id = self.api_config.get("client_id") 
+        redirect_uri = self.api_config.get('redirect_uri')
+        oauth_save_url = "http://sandbox2.mammoth.io?integration_key=salesforce"
+
+
+        auth_spec["AUTH_URL"] = sf_oauth_url + "client_id=" + client_id + "&redirect_uri=" + redirect_uri + "&state=" + urllib2.quote(oauth_save_url)
+
         return auth_spec
 
     def get_identity_config_for_storage(self, params=None):
@@ -52,23 +64,18 @@ class salesforceManager(ThreePBase):
         :param params: dict, required to generate identity_config dict object for storage
         :return: newly created identity_config. The value obtained in params is
         a dictionary that should contain following keys:
-             username,
-             password,
-             security_token,
         
         """
+        print 'comeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', params
+        code = params.get(const.CODE)
+        
         # create an identity dictionary and store this with the storage handle.
         identity_config = {
-            const.IDENTITY_FIELDS.USERNAME: params.get(const.IDENTITY_FIELDS.USERNAME),
-            const.IDENTITY_FIELDS.PASSWORD: params.get(const.IDENTITY_FIELDS.PASSWORD),
-            const.IDENTITY_FIELDS.SECURITY_TOKEN: params.get(const.IDENTITY_FIELDS.SECURITY_TOKEN),
-            
+          "access_token": "",
+          "refresh_token": "",
+          "name": "email",
+          "value": "email"
         }
-        if params.get(COMMON_IDENTITY_FIELDS.NAME):
-            identity_config[COMMON_IDENTITY_FIELDS.NAME] = params.get(
-                COMMON_IDENTITY_FIELDS.NAME)
-        else:
-            identity_config[sdkconst.COMMON_IDENTITY_FIELDS.NAME] = params.get(const.IDENTITY_FIELDS.USERNAME)
         return identity_config
 
     def validate_identity_config(self, identity_config):

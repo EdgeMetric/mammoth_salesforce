@@ -80,8 +80,7 @@ class salesforceDataYielder(DataYielder):
        """
         ds_config_key = self.config_key
         identity_key = self.identity_key
-        self.identity_config = self.storage_handle.get(sdkconst.NAMESPACES.IDENTITIES,
-                                                       identity_key)
+        self.identity_config = self.storage_handle.get(sdkconst.NAMESPACES.IDENTITIES, identity_key)
 
         self.ds_config = self.storage_handle.get(identity_key, ds_config_key)
 
