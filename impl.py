@@ -35,9 +35,6 @@ class salesforceManager(ThreePBase):
     def __init__(self, storage_handle, api_config):
         
         self.config_file = "/".join([os.path.dirname(__file__), const.CONFIG_FILE])
-        self.sf = Salesforce(username="ayush@mindgrep.com",password="Rakkar176057",security_token="ydVAiiVUeaFXzGJnc8cP2jmH")
-        self.api_config = api_config
-        self.storage_handle = storage_handle
         super(salesforceManager, self).__init__(storage_handle, api_config)
 
 
@@ -52,7 +49,7 @@ class salesforceManager(ThreePBase):
         sf_oauth_url = self.api_config.get("oauth2_code_url")
         client_id = self.api_config.get("client_id") 
         redirect_uri = self.api_config.get('redirect_uri')
-        oauth_save_url = "http://sandbox2.mammoth.io?integration_key=salesforce"
+        oauth_save_url = "http://localhost:6346/sandbox?integration_key=salesforce"
 
 
         auth_spec["AUTH_URL"] = sf_oauth_url + "client_id=" + client_id + "&redirect_uri=" + redirect_uri + "&state=" + urllib2.quote(oauth_save_url)

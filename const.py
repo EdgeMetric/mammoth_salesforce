@@ -2,12 +2,9 @@ __author__ = 'pankaj'
 
 CONFIG_FILE = "salesforce.json"
 
-
+CODE = "code"
 class IDENTITY_FIELDS:
-    USERNAME = "username"
-    PASSWORD = "password"
-    SECURITY_TOKEN = "security_token"
-    
+
     pass
 
 
