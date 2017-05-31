@@ -4,6 +4,7 @@ import os
 import const
 import json
 import urllib2
+import requests
 import  logging as log
 import sdk.const as sdkconst
 from sdk.const import COMMON_CONFIG_FIELDS, \
@@ -17,6 +18,8 @@ from simple_salesforce import Salesforce
 
 NON_BULK_OBJECTS = ['DeclinedEventRelation', 'AcceptedEventRelation', 'CaseStatus', 'ContractStatus', 'KnowledgeArticle', 'KnowledgeArticleVersion', 'KnowledgeArticleVersionHistory', 'KnowledgeArticleViewStat', 'KnowledgeArticleVoteStat', 'LeadStatus', 'OpportunityStage', 'PartnerRole', 'RecentlyViewed', 'SolutionStatus', 'TaskPriority', 'UserRecordAccess']
 
+OAUTH_SAVE_URL = "http://localhost:6346/sandbox?integration_key=salesforce"
+TOKEN_REQUEST_URL = 'https://login.salesforce.com/services/oauth2/token' 
 
 # Insert your import statements here
 from runtime_import.libs.salesforce.util import salesforceDataYielder
@@ -49,10 +52,9 @@ class salesforceManager(ThreePBase):
         sf_oauth_url = self.api_config.get("oauth2_code_url")
         client_id = self.api_config.get("client_id") 
         redirect_uri = self.api_config.get('redirect_uri')
-        oauth_save_url = "http://localhost:6346/sandbox?integration_key=salesforce"
 
 
-        auth_spec["AUTH_URL"] = sf_oauth_url + "client_id=" + client_id + "&redirect_uri=" + redirect_uri + "&state=" + urllib2.quote(oauth_save_url)
+        auth_spec["AUTH_URL"] = sf_oauth_url + "client_id=" + client_id + "&redirect_uri=" + redirect_uri + "&state=" + urllib2.quote(OAUTH_SAVE_URL)
 
         return auth_spec
 
@@ -66,12 +68,29 @@ class salesforceManager(ThreePBase):
         print 'comeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', params
         code = params.get(const.CODE)
         
+        #Get access token, refresh token, user id etc.
+        payload = {
+          "code": code,
+          "client_id": self.api_config.get("client_id") ,
+          "client_secret": self.api_config.get("client_secret"),
+          "grant_type": "authorization_code",
+          "redirect_uri": self.api_config.get("redirect_uri")
+        }
+        access_token_response = requests.post(TOKEN_REQUEST_URL, params=payload).json()
+
+        #Now get the user name and email
+        payload = {
+          "access_token": access_token_response['access_token'],
+          "format": "json"
+        }
+        user_details = requests.get(access_token_response['id'], params = payload).json()
+
         # create an identity dictionary and store this with the storage handle.
         identity_config = {
-          "access_token": "",
-          "refresh_token": "",
-          "name": "email",
-          "value": "email"
+          "access_token": access_token_response['access_token'],
+          #"refresh_token": access_token_response['refresh_token'], 
+          "name": user_details['display_name'],
+          "value": user_details['email']
         }
         return identity_config
 
