@@ -65,7 +65,6 @@ class salesforceManager(ThreePBase):
         a dictionary that should contain following keys:
         
         """
-        print 'comeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', params
         code = params.get(const.CODE)
         
         #Get access token, refresh token, user id etc.
@@ -152,7 +151,8 @@ class salesforceManager(ThreePBase):
             Any dynamic changes to ds_config_spec, if required, should be made here.
         """
 
-        sf_objects = self.sf.describe()["sobjects"]
+        sf = Salesforce(instance='na1.salesforce.com', session_id=identity_config['access_token'])
+        sf_objects = sf.describe()["sobjects"]
 
         #List of all sf objects, name value pairs
         sf_objects_json = _(sf_objects)
@@ -174,7 +174,7 @@ class salesforceManager(ThreePBase):
         _.set_(ds_config_spec, 'ux.attributes.sf_objects.items', sf_objects_json)
 
         first_object_name = _.head(sf_objects_json)['value']
-        first_object_schema = getattr(self.sf, first_object_name).describe()
+        first_object_schema = getattr(sf, first_object_name).describe()
 
         _.set_(ds_config_spec, 'fields.sf_objects.default_value', first_object_name)
 
@@ -216,7 +216,7 @@ class salesforceManager(ThreePBase):
         """
 
         sf_object = params.get(CONFIG_FIELDS.SF_OBJECTS)
-        sf_object_schema = getattr(self.sf, sf_object).describe()
+        sf_object_schema = getattr(sf, sf_object).describe()
         fields = sf_object_schema['fields'] 
         
         ds_config = {
@@ -331,7 +331,9 @@ class salesforceManager(ThreePBase):
             information based on inputs received
         """
         selected_sf_object = _.get(params, CONFIG_FIELDS.SF_OBJECTS)
-        sf_object_schema = getattr(self.sf, selected_sf_object).describe()
+
+        sf = Salesforce(instance='na1.salesforce.com', session_id=identity_config['access_token'])
+        sf_object_schema = getattr(sf, selected_sf_object).describe()
         
 
         new_ds_config = {}

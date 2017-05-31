@@ -49,7 +49,9 @@ class salesforceDataYielder(DataYielder):
         #print 'querying sf object', sf_object, query_string
 
         #TODO use OAUTH2 token
-        sf = Salesforce(username="ayush@mindgrep.com",password="Rakkar176057",security_token="ydVAiiVUeaFXzGJnc8cP2jmH")
+        #sf = Salesforce(username="ayush@mindgrep.com",password="Rakkar176057",security_token="ydVAiiVUeaFXzGJnc8cP2jmH")
+        sf = Salesforce(instance='na1.salesforce.com', session_id=self.idenity_config['access_token'])
+
         bulk = SalesforceBulk(sessionId=sf.session_id, host=sf.sf_instance)
 
         job = bulk.create_query_job(sf_object, contentType='CSV')
