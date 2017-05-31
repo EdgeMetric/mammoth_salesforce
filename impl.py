@@ -87,7 +87,7 @@ class salesforceManager(ThreePBase):
         # create an identity dictionary and store this with the storage handle.
         identity_config = {
           "access_token": access_token_response['access_token'],
-          #"refresh_token": access_token_response['refresh_token'], 
+          "refresh_token": access_token_response['refresh_token'], 
           "name": user_details['display_name'],
           "value": user_details['email']
         }
