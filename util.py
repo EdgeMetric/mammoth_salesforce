@@ -50,7 +50,7 @@ class salesforceDataYielder(DataYielder):
 
         #TODO use OAUTH2 token
         #sf = Salesforce(username="ayush@mindgrep.com",password="Rakkar176057",security_token="ydVAiiVUeaFXzGJnc8cP2jmH")
-        sf = Salesforce(instance='na1.salesforce.com', session_id=self.idenity_config['access_token'])
+        sf = Salesforce(instance='na1.salesforce.com', session_id=self.identity_config['access_token'])
 
         bulk = SalesforceBulk(sessionId=sf.session_id, host=sf.sf_instance)
 
@@ -103,7 +103,10 @@ class salesforceDataYielder(DataYielder):
                     'type': COLUMN DATATYPE -  TEXT/DATE/NUMERIC
                }
         """
-        all_schema_fields = self.ds_config['sf_fields']
+        sf = Salesforce(instance='na1.salesforce.com', session_id=self.identity_config['access_token'])
+        sf_object = self.ds_config[CONFIG_FIELDS.SF_OBJECTS]
+        sf_object_schema = getattr(sf, sf_object).describe()
+        all_schema_fields = sf_object_schema['fields']
         selected_fields = self.ds_config[CONFIG_FIELDS.SF_OBJECT_SCHEMA]
         selected_fields_meta = map(lambda field: {
             'internal_name': "sf_{0}".format(field.lower()),

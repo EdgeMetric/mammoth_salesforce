@@ -216,13 +216,10 @@ class salesforceManager(ThreePBase):
         """
 
         sf_object = params.get(CONFIG_FIELDS.SF_OBJECTS)
-        sf_object_schema = getattr(sf, sf_object).describe()
-        fields = sf_object_schema['fields'] 
         
         ds_config = {
             CONFIG_FIELDS.SF_OBJECTS: sf_object,
-            CONFIG_FIELDS.SF_OBJECT_SCHEMA: params.get(CONFIG_FIELDS.SF_OBJECT_SCHEMA),
-            "sf_fields": sf_object_schema['fields'] 
+            CONFIG_FIELDS.SF_OBJECT_SCHEMA: params.get(CONFIG_FIELDS.SF_OBJECT_SCHEMA)
         }
 
         return ds_config
