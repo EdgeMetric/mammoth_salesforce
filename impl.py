@@ -341,7 +341,19 @@ class salesforceManager(ThreePBase):
         selected_sf_object = _.get(params, CONFIG_FIELDS.SF_OBJECTS)
 
         sf = Salesforce(instance='na1.salesforce.com', session_id=identity_config['access_token'])
-        sf_object_schema = getattr(sf, selected_sf_object).describe()
+        try:
+          sf_object_schema = getattr(sf, selected_sf_object).describe()
+        except:
+          refresh_response = requests.post(TOKEN_REQUEST_URL, {
+            'grant_type': 'refresh_token',
+            'client_id': self.api_config.get("client_id"),
+            'refresh_token': identity_config['refresh_token']
+          }).json()
+          identity_config['access_token'] = refresh_response['access_token']
+          #self.storage_handle.update(self.identity_key, identity_config, sdkconst.NAMESPACES.IDENTITIES)
+          #Call this function itself with new access token
+          return self.augment_ds_config_spec(identity_config, params)
+         
         
 
         new_ds_config = {}
