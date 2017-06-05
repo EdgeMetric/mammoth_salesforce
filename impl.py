@@ -151,8 +151,19 @@ class salesforceManager(ThreePBase):
             Any dynamic changes to ds_config_spec, if required, should be made here.
         """
 
-        sf = Salesforce(instance='na1.salesforce.com', session_id=identity_config['access_token'])
-        sf_objects = sf.describe()["sobjects"]
+        try:
+          sf = Salesforce(instance='na1.salesforce.com', session_id=identity_config['access_token'])
+          sf_objects = sf.describe()["sobjects"]
+        except:
+          refresh_response = requests.post(TOKEN_REQUEST_URL, {
+            'grant_type': 'refresh_token',
+            'client_id': self.api_config.get("client_id"),
+            'refresh_token': identity_config['refresh_token']
+          }).json()
+          identity_config['access_token'] = refresh_response['access_token']
+          #self.storage_handle.update(self.identity_key, identity_config, sdkconst.NAMESPACES.IDENTITIES)
+          #Call this function itself with new access token
+          return self.get_ds_config_spec(ds_config_spec, identity_config, params) 
 
         #List of all sf objects, name value pairs
         sf_objects_json = _(sf_objects)
