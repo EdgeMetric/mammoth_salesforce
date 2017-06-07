@@ -116,7 +116,17 @@ class salesforceDataYielder(DataYielder):
         """
         sf = Salesforce(instance='na1.salesforce.com', session_id=self.identity_config['access_token'])
         sf_object = self.ds_config[CONFIG_FIELDS.SF_OBJECTS]
-        sf_object_schema = getattr(sf, sf_object).describe()
+        try:
+          sf_object_schema = getattr(sf, sf_object).describe()
+        except:
+          refresh_response = requests.post(TOKEN_REQUEST_URL, {
+            'grant_type': 'refresh_token',
+            'client_id': self.api_config.get("client_id"),
+            'refresh_token': self.identity_config['refresh_token']
+          }).json()
+          self.identity_config['access_token'] = refresh_response['access_token']
+          return describe(self)
+    
         all_schema_fields = sf_object_schema['fields']
         selected_fields = self.ds_config[CONFIG_FIELDS.SF_OBJECT_SCHEMA]
         selected_fields_meta = map(lambda field: {
