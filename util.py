@@ -2,6 +2,7 @@
 import logging
 import const
 import csv
+import requests
 from const import CONFIG_FIELDS
 import sdk.const as sdkconst
 from threep.base import DataYielder
@@ -11,6 +12,7 @@ from pydash import py_ as _
 
 log = logging
 
+TOKEN_REQUEST_URL = 'https://login.salesforce.com/services/oauth2/token' 
 
 class salesforceDataYielder(DataYielder):
     def __init__(self, *args, **kwargs):
@@ -48,14 +50,20 @@ class salesforceDataYielder(DataYielder):
 
         #print 'querying sf object', sf_object, query_string
 
-        #TODO use OAUTH2 token
-        #sf = Salesforce(username="ayush@mindgrep.com",password="Rakkar176057",security_token="ydVAiiVUeaFXzGJnc8cP2jmH")
-        sf = Salesforce(instance='na1.salesforce.com', session_id=self.identity_config['access_token'])
-
-        bulk = SalesforceBulk(sessionId=sf.session_id, host=sf.sf_instance)
-
-        job = bulk.create_query_job(sf_object, contentType='CSV')
-        batch = bulk.query(job, query_string)
+        try:
+          sf = Salesforce(instance= 'na1.salesforce.com', session_id= self.identity_config['access_token'])
+          bulk = SalesforceBulk(sessionId=sf.session_id, host=sf.sf_instance)
+          job = bulk.create_query_job(sf_object, contentType='CSV')
+          batch = bulk.query(job, query_string)
+        except:
+          refresh_response = requests.post(TOKEN_REQUEST_URL, {
+            'grant_type': 'refresh_token',
+            'client_id': self.api_config.get("client_id"),
+            'refresh_token': self.identity_config['refresh_token']
+          }).json()
+          self.identity_config['access_token'] = refresh_response['access_token']
+          return self.get_data_as_csv(file_path)
+         
 
         bulk.wait_for_batch(job, batch)
         target = open(file_path, 'wb')
@@ -120,6 +128,7 @@ class salesforceDataYielder(DataYielder):
       for field in sf_fields:
         if field['name'] == field_name:
           return field['label']
+      print 'field_name not in sf fields ', field_name, sf_fields
       raise Exception('field_name not in sf fields ' + field_name)
 
     def get_field_type(self, field_name, sf_fields):
