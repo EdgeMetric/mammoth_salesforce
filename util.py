@@ -46,6 +46,7 @@ class salesforceDataYielder(DataYielder):
         sf_object = self.ds_config[CONFIG_FIELDS.SF_OBJECTS]
         fields = self.ds_config[CONFIG_FIELDS.SF_OBJECT_SCHEMA]
         fields = map(lambda field: field.encode('utf-8'), fields)
+
         query_string = "select " + ",".join(fields) + " from " + sf_object
 
         #print 'querying sf object', sf_object, query_string
@@ -69,9 +70,11 @@ class salesforceDataYielder(DataYielder):
         target = open(file_path, 'wb')
         writer = csv.writer(target, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 
-        writer.writerow(fields)
+        #writer.writerow(fields)
+
         for row_dict in bulk.get_batch_result_iter(job, batch, parse_csv=True):
           row = self.values_for_keys(row_dict, fields)
+          row.append(self.batchId)
           writer.writerow(row)
         bulk.close_job(job)
         return {}
