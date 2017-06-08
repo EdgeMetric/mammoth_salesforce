@@ -49,7 +49,7 @@ class salesforceDataYielder(DataYielder):
 
         query_string = "select " + ",".join(fields) + " from " + sf_object
 
-        #print 'querying sf object', sf_object, query_string
+        print 'querying sf object', sf_object, query_string
 
         try:
           sf = Salesforce(instance= 'na1.salesforce.com', session_id= self.identity_config['access_token'])
@@ -62,6 +62,9 @@ class salesforceDataYielder(DataYielder):
             'client_id': self.api_config.get("client_id"),
             'refresh_token': self.identity_config['refresh_token']
           }).json()
+          identity_key = self.identity_config['config_key']
+          self.storage_handle.update(identity_key, self.identity_config, sdkconst.NAMESPACES.IDENTITIES)
+          #Call this function itself with new access token
           self.identity_config['access_token'] = refresh_response['access_token']
           return self.get_data_as_csv(file_path)
          

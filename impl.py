@@ -160,9 +160,12 @@ class salesforceManager(ThreePBase):
             'client_id': self.api_config.get("client_id"),
             'refresh_token': identity_config['refresh_token']
           }).json()
-          identity_config['access_token'] = refresh_response['access_token']
-          #self.storage_handle.update(self.identity_key, identity_config, sdkconst.NAMESPACES.IDENTITIES)
+
+          identity_key = identity_config['config_key']
+          self.storage_handle.update(identity_key, identity_config, sdkconst.NAMESPACES.IDENTITIES)
+
           #Call this function itself with new access token
+          identity_config['access_token'] = refresh_response['access_token']
           return self.get_ds_config_spec(ds_config_spec, identity_config, params) 
 
         #List of all sf objects, name value pairs
@@ -349,9 +352,10 @@ class salesforceManager(ThreePBase):
             'client_id': self.api_config.get("client_id"),
             'refresh_token': identity_config['refresh_token']
           }).json()
-          identity_config['access_token'] = refresh_response['access_token']
-          #self.storage_handle.update(self.identity_key, identity_config, sdkconst.NAMESPACES.IDENTITIES)
+          identity_key = identity_config['config_key']
+          self.storage_handle.update(identity_key, identity_config, sdkconst.NAMESPACES.IDENTITIES)
           #Call this function itself with new access token
+          identity_config['access_token'] = refresh_response['access_token']
           return self.augment_ds_config_spec(identity_config, params)
          
         
