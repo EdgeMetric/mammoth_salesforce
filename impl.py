@@ -22,6 +22,7 @@ OAUTH_SAVE_URL = "http://localhost:6346/sandbox?integration_key=salesforce"
 TOKEN_REQUEST_URL = 'https://login.salesforce.com/services/oauth2/token' 
 
 # Insert your import statements here
+import runtime_import.libs.salesforce.util as util
 from runtime_import.libs.salesforce.util import salesforceDataYielder
 
 # End of import statements
@@ -98,6 +99,8 @@ class salesforceManager(ThreePBase):
             :param identity_config:
             :return: True/False: whether the given identity_config is valid or not
         """
+        
+
         return True
 
     def format_identities_list(self, identities):
@@ -155,17 +158,8 @@ class salesforceManager(ThreePBase):
           sf = Salesforce(instance='na1.salesforce.com', session_id=identity_config['access_token'])
           sf_objects = sf.describe()["sobjects"]
         except:
-          refresh_response = requests.post(TOKEN_REQUEST_URL, {
-            'grant_type': 'refresh_token',
-            'client_id': self.api_config.get("client_id"),
-            'refresh_token': identity_config['refresh_token']
-          }).json()
-
-          identity_key = identity_config['config_key']
-          self.storage_handle.update(identity_key, identity_config, sdkconst.NAMESPACES.IDENTITIES)
-
+          salesforceDataYielder.regenerate_access_token(self, identity_config)
           #Call this function itself with new access token
-          identity_config['access_token'] = refresh_response['access_token']
           return self.get_ds_config_spec(ds_config_spec, identity_config, params) 
 
         #List of all sf objects, name value pairs
@@ -272,6 +266,11 @@ class salesforceManager(ThreePBase):
             :return: Checks weather the connection specified by provided identity_key and ds_config_key is valid or not. Returns True if valid,
                      False if invalid
         """
+        try:
+          salesforceDataYielder.regenerate_access_token(self, identity_config)
+        except ValueError as err:
+          log.error('Identity config is invalid', identity_config, 'Error is:', err)
+          return False
         return True
 
     def sanitize_identity(self, identity):
@@ -347,19 +346,11 @@ class salesforceManager(ThreePBase):
         try:
           sf_object_schema = getattr(sf, selected_sf_object).describe()
         except:
-          refresh_response = requests.post(TOKEN_REQUEST_URL, {
-            'grant_type': 'refresh_token',
-            'client_id': self.api_config.get("client_id"),
-            'refresh_token': identity_config['refresh_token']
-          }).json()
-          identity_key = identity_config['config_key']
-          self.storage_handle.update(identity_key, identity_config, sdkconst.NAMESPACES.IDENTITIES)
+          salesforceDataYielder.regenerate_access_token(self, identity_config)
+
           #Call this function itself with new access token
-          identity_config['access_token'] = refresh_response['access_token']
           return self.augment_ds_config_spec(identity_config, params)
          
-        
-
         new_ds_config = {}
 
         self.set_schema_items(new_ds_config, sf_object_schema)

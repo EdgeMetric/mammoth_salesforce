@@ -57,15 +57,7 @@ class salesforceDataYielder(DataYielder):
           job = bulk.create_query_job(sf_object, contentType='CSV')
           batch = bulk.query(job, query_string)
         except:
-          refresh_response = requests.post(TOKEN_REQUEST_URL, {
-            'grant_type': 'refresh_token',
-            'client_id': self.api_config.get("client_id"),
-            'refresh_token': self.identity_config['refresh_token']
-          }).json()
-          identity_key = self.identity_config['config_key']
-          self.storage_handle.update(identity_key, self.identity_config, sdkconst.NAMESPACES.IDENTITIES)
-          #Call this function itself with new access token
-          self.identity_config['access_token'] = refresh_response['access_token']
+          salesforceDataYielder.regenerate_access_token(self, self.identity_config)
           return self.get_data_as_csv(file_path)
          
 
@@ -81,6 +73,22 @@ class salesforceDataYielder(DataYielder):
           writer.writerow(row)
         bulk.close_job(job)
         return {}
+
+    @staticmethod
+    def regenerate_access_token(instance, identity_config):
+      refresh_response = requests.post(TOKEN_REQUEST_URL, {
+        'grant_type': 'refresh_token',
+        'client_id': instance.api_config.get("client_id"),
+        'refresh_token': identity_config['refresh_token']
+        }).json()
+
+      if _.get(refresh_response, 'error'):
+        raise ValueError('Invalid credentials', refresh_response)
+
+      identity_key = identity_config['config_key']
+      instance.storage_handle.update(identity_key, identity_config, sdkconst.NAMESPACES.IDENTITIES)
+      print 'generated refresh token', refresh_response
+      identity_config['access_token'] = refresh_response['access_token']
 
     def values_for_keys(self, dict, keys):
       values = []
@@ -122,12 +130,7 @@ class salesforceDataYielder(DataYielder):
         try:
           sf_object_schema = getattr(sf, sf_object).describe()
         except:
-          refresh_response = requests.post(TOKEN_REQUEST_URL, {
-            'grant_type': 'refresh_token',
-            'client_id': self.api_config.get("client_id"),
-            'refresh_token': self.identity_config['refresh_token']
-          }).json()
-          self.identity_config['access_token'] = refresh_response['access_token']
+          salesforceDataYielder.regenerate_access_token(self, self.identity_config)
           return describe(self)
     
         all_schema_fields = sf_object_schema['fields']
