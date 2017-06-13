@@ -14,6 +14,7 @@ from threep.base import ThreePBase
 from sdk.utils import get_key_value_label, make_kv_list
 from pydash import py_ as _
 from simple_salesforce import Salesforce
+from salesforce_bulk.salesforce_bulk import BulkApiError 
 #Objects not supported by bulk query. These are meta objects
 
 NON_BULK_OBJECTS = ['DeclinedEventRelation', 'AcceptedEventRelation', 'CaseStatus', 'ContractStatus', 'KnowledgeArticle', 'KnowledgeArticleVersion', 'KnowledgeArticleVersionHistory', 'KnowledgeArticleViewStat', 'KnowledgeArticleVoteStat', 'LeadStatus', 'OpportunityStage', 'PartnerRole', 'RecentlyViewed', 'SolutionStatus', 'TaskPriority', 'UserRecordAccess']
@@ -22,7 +23,6 @@ OAUTH_SAVE_URL = "http://localhost:6346/sandbox?integration_key=salesforce"
 TOKEN_REQUEST_URL = 'https://login.salesforce.com/services/oauth2/token' 
 
 # Insert your import statements here
-import runtime_import.libs.salesforce.util as util
 from runtime_import.libs.salesforce.util import salesforceDataYielder
 
 # End of import statements
@@ -157,7 +157,7 @@ class salesforceManager(ThreePBase):
         try:
           sf = Salesforce(instance='na1.salesforce.com', session_id=identity_config['access_token'])
           sf_objects = sf.describe()["sobjects"]
-        except:
+        except BulkApiError as err:
           salesforceDataYielder.regenerate_access_token(self, identity_config)
           #Call this function itself with new access token
           return self.get_ds_config_spec(ds_config_spec, identity_config, params) 
@@ -268,7 +268,7 @@ class salesforceManager(ThreePBase):
         """
         try:
           salesforceDataYielder.regenerate_access_token(self, identity_config)
-        except ValueError as err:
+        except RuntimeError as err:
           log.error('Identity config is invalid', identity_config, 'Error is:', err)
           return False
         return True
@@ -345,7 +345,7 @@ class salesforceManager(ThreePBase):
         sf = Salesforce(instance='na1.salesforce.com', session_id=identity_config['access_token'])
         try:
           sf_object_schema = getattr(sf, selected_sf_object).describe()
-        except:
+        except BulkApiError as err:
           salesforceDataYielder.regenerate_access_token(self, identity_config)
 
           #Call this function itself with new access token

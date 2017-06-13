@@ -8,6 +8,7 @@ import sdk.const as sdkconst
 from threep.base import DataYielder
 from simple_salesforce import Salesforce
 from salesforce_bulk import SalesforceBulk
+from salesforce_bulk.salesforce_bulk import BulkApiError
 from pydash import py_ as _
 
 log = logging
@@ -56,7 +57,7 @@ class salesforceDataYielder(DataYielder):
           bulk = SalesforceBulk(sessionId=sf.session_id, host=sf.sf_instance)
           job = bulk.create_query_job(sf_object, contentType='CSV')
           batch = bulk.query(job, query_string)
-        except:
+        except BulkApiError as err:
           salesforceDataYielder.regenerate_access_token(self, self.identity_config)
           return self.get_data_as_csv(file_path)
          
@@ -83,7 +84,7 @@ class salesforceDataYielder(DataYielder):
         }).json()
 
       if _.get(refresh_response, 'error'):
-        raise ValueError('Invalid credentials', refresh_response)
+        raise RuntimeError('Could not generate access token' + refresh_response)
 
       identity_key = identity_config['config_key']
       identity_config['access_token'] = refresh_response['access_token']
@@ -129,7 +130,7 @@ class salesforceDataYielder(DataYielder):
         sf_object = self.ds_config[CONFIG_FIELDS.SF_OBJECTS]
         try:
           sf_object_schema = getattr(sf, sf_object).describe()
-        except:
+        except BulkApiError as err:
           salesforceDataYielder.regenerate_access_token(self, self.identity_config)
           return describe(self)
     
