@@ -13,7 +13,6 @@ from pydash import py_ as _
 
 log = logging
 
-TOKEN_REQUEST_URL = 'https://login.salesforce.com/services/oauth2/token' 
 
 class salesforceDataYielder(DataYielder):
     def __init__(self, *args, **kwargs):
@@ -53,7 +52,7 @@ class salesforceDataYielder(DataYielder):
         print 'querying sf object', sf_object, query_string
 
         try:
-          sf = Salesforce(instance= 'na1.salesforce.com', session_id= self.identity_config['access_token'])
+          sf = Salesforce(instance= const.SF_INSTANCE, session_id= self.identity_config['access_token'])
           bulk = SalesforceBulk(sessionId=sf.session_id, host=sf.sf_instance)
           job = bulk.create_query_job(sf_object, contentType='CSV')
           batch = bulk.query(job, query_string)
@@ -77,11 +76,11 @@ class salesforceDataYielder(DataYielder):
 
     @staticmethod
     def regenerate_access_token(instance, identity_config):
-      refresh_response = requests.post(TOKEN_REQUEST_URL, {
+      refresh_response = requests.post(const.TOKEN_REQUEST_URL, {
         'grant_type': 'refresh_token',
         'client_id': instance.api_config.get("client_id"),
         'refresh_token': identity_config['refresh_token']
-        }).json()
+      }).json()
 
       if _.get(refresh_response, 'error'):
         raise RuntimeError('Could not generate access token' + refresh_response)
@@ -89,7 +88,7 @@ class salesforceDataYielder(DataYielder):
       identity_key = identity_config['config_key']
       identity_config['access_token'] = refresh_response['access_token']
       instance.storage_handle.update(identity_key, identity_config, sdkconst.NAMESPACES.IDENTITIES)
-      print 'generated refresh token', refresh_response
+      print 'generated new access token', refresh_response
 
     def values_for_keys(self, dict, keys):
       values = []
@@ -126,7 +125,7 @@ class salesforceDataYielder(DataYielder):
                     'type': COLUMN DATATYPE -  TEXT/DATE/NUMERIC
                }
         """
-        sf = Salesforce(instance='na1.salesforce.com', session_id=self.identity_config['access_token'])
+        sf = Salesforce(instance= const.SF_INSTANCE, session_id=self.identity_config['access_token'])
         sf_object = self.ds_config[CONFIG_FIELDS.SF_OBJECTS]
         try:
           sf_object_schema = getattr(sf, sf_object).describe()

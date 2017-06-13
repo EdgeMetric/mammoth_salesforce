@@ -17,11 +17,6 @@ from simple_salesforce import Salesforce
 from salesforce_bulk.salesforce_bulk import BulkApiError 
 #Objects not supported by bulk query. These are meta objects
 
-NON_BULK_OBJECTS = ['DeclinedEventRelation', 'AcceptedEventRelation', 'CaseStatus', 'ContractStatus', 'KnowledgeArticle', 'KnowledgeArticleVersion', 'KnowledgeArticleVersionHistory', 'KnowledgeArticleViewStat', 'KnowledgeArticleVoteStat', 'LeadStatus', 'OpportunityStage', 'PartnerRole', 'RecentlyViewed', 'SolutionStatus', 'TaskPriority', 'UserRecordAccess']
-
-OAUTH_SAVE_URL = "http://localhost:6346/sandbox?integration_key=salesforce"
-TOKEN_REQUEST_URL = 'https://login.salesforce.com/services/oauth2/token' 
-
 # Insert your import statements here
 from runtime_import.libs.salesforce.util import salesforceDataYielder
 
@@ -55,7 +50,7 @@ class salesforceManager(ThreePBase):
         redirect_uri = self.api_config.get('redirect_uri')
 
 
-        auth_spec["AUTH_URL"] = sf_oauth_url + "client_id=" + client_id + "&redirect_uri=" + redirect_uri + "&state=" + urllib2.quote(OAUTH_SAVE_URL)
+        auth_spec["AUTH_URL"] = sf_oauth_url + "client_id=" + client_id + "&redirect_uri=" + redirect_uri + "&state=" + urllib2.quote(const.OAUTH_SAVE_URL)
 
         return auth_spec
 
@@ -76,7 +71,7 @@ class salesforceManager(ThreePBase):
           "grant_type": "authorization_code",
           "redirect_uri": self.api_config.get("redirect_uri")
         }
-        access_token_response = requests.post(TOKEN_REQUEST_URL, params=payload).json()
+        access_token_response = requests.post(const.TOKEN_REQUEST_URL, params=payload).json()
 
         #Now get the user name and email
         payload = {
@@ -155,7 +150,7 @@ class salesforceManager(ThreePBase):
         """
 
         try:
-          sf = Salesforce(instance='na1.salesforce.com', session_id=identity_config['access_token'])
+          sf = Salesforce(instance= const.SF_INSTANCE, session_id=identity_config['access_token'])
           sf_objects = sf.describe()["sobjects"]
         except BulkApiError as err:
           salesforceDataYielder.regenerate_access_token(self, identity_config)
@@ -172,7 +167,7 @@ class salesforceManager(ThreePBase):
         sf_objects_json = sf_objects_json.map_(lambda sf_object: {"name": sf_object['label'], "value": sf_object['name']})
 
         #Filter out the objects which can not be fetched in bulk
-        sf_objects_json = sf_objects_json.filter_(lambda sf_object: sf_object['value'] not in NON_BULK_OBJECTS)
+        sf_objects_json = sf_objects_json.filter_(lambda sf_object: sf_object['value'] not in const.NON_BULK_OBJECTS)
 
         sf_objects_json = sf_objects_json.value()
 
@@ -342,7 +337,7 @@ class salesforceManager(ThreePBase):
         """
         selected_sf_object = _.get(params, CONFIG_FIELDS.SF_OBJECTS)
 
-        sf = Salesforce(instance='na1.salesforce.com', session_id=identity_config['access_token'])
+        sf = Salesforce(instance= const.SF_INSTANCE, session_id=identity_config['access_token'])
         try:
           sf_object_schema = getattr(sf, selected_sf_object).describe()
         except BulkApiError as err:
