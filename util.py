@@ -86,9 +86,9 @@ class salesforceDataYielder(DataYielder):
         raise ValueError('Invalid credentials', refresh_response)
 
       identity_key = identity_config['config_key']
+      identity_config['access_token'] = refresh_response['access_token']
       instance.storage_handle.update(identity_key, identity_config, sdkconst.NAMESPACES.IDENTITIES)
       print 'generated refresh token', refresh_response
-      identity_config['access_token'] = refresh_response['access_token']
 
     def values_for_keys(self, dict, keys):
       values = []
