@@ -139,7 +139,7 @@ class salesforceManager(ThreePBase):
         return True
 
     def get_ds_config_spec(self, ds_config_spec,
-                           identity_config, params=None):
+                           identity_config, params=None, num_retries=0):
         """
             :param ds_config_spec: ds_config_spec from json spec.
             :param identity_config: corresponding identity object for which
@@ -152,10 +152,13 @@ class salesforceManager(ThreePBase):
         try:
           sf = Salesforce(instance= const.SF_INSTANCE, session_id=identity_config['access_token'])
           sf_objects = sf.describe()["sobjects"]
-        except BulkApiError as err:
+        except Exception as err:
+          if num_retries == 3:
+            raise err
           salesforceDataYielder.regenerate_access_token(self, identity_config)
           #Call this function itself with new access token
-          return self.get_ds_config_spec(ds_config_spec, identity_config, params) 
+          num_retries += 1
+          return self.get_ds_config_spec(ds_config_spec, identity_config, params, ++num_retries) 
 
         #List of all sf objects, name value pairs
         sf_objects_json = _(sf_objects)
@@ -327,7 +330,7 @@ class salesforceManager(ThreePBase):
         """
         return ds_config
 
-    def augment_ds_config_spec(self, identity_config, params):
+    def augment_ds_config_spec(self, identity_config, params, num_retries=0):
         """
             :param params: dict object containing subset ds_config parameters
             :param identity_config:
@@ -340,11 +343,14 @@ class salesforceManager(ThreePBase):
         sf = Salesforce(instance= const.SF_INSTANCE, session_id=identity_config['access_token'])
         try:
           sf_object_schema = getattr(sf, selected_sf_object).describe()
-        except BulkApiError as err:
+        except Exception as err:
+          if num_retries == 3:
+            raise err
           salesforceDataYielder.regenerate_access_token(self, identity_config)
 
           #Call this function itself with new access token
-          return self.augment_ds_config_spec(identity_config, params)
+          num_retries += 1
+          return self.augment_ds_config_spec(identity_config, params, num_retries)
          
         new_ds_config = {}
 

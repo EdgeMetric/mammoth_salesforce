@@ -1,6 +1,7 @@
 # encoding: utf-8
 import logging
 import const
+import json
 import csv
 import requests
 from const import CONFIG_FIELDS
@@ -37,7 +38,7 @@ class salesforceDataYielder(DataYielder):
             """
         return {}
 
-    def get_data_as_csv(self, file_path):
+    def get_data_as_csv(self, file_path, num_retries=0):
         """
             :param file_path: file path where csv results has to be saved
             :return: dict object mentioning csv download status, success/failure
@@ -56,9 +57,12 @@ class salesforceDataYielder(DataYielder):
           bulk = SalesforceBulk(sessionId=sf.session_id, host=sf.sf_instance)
           job = bulk.create_query_job(sf_object, contentType='CSV')
           batch = bulk.query(job, query_string)
-        except BulkApiError as err:
+        except Exception as err:
+          if num_retries == 3:
+            raise err
           salesforceDataYielder.regenerate_access_token(self, self.identity_config)
-          return self.get_data_as_csv(file_path)
+          num_retries += 1
+          return self.get_data_as_csv(file_path, num_retries)
          
 
         bulk.wait_for_batch(job, batch)
@@ -83,7 +87,7 @@ class salesforceDataYielder(DataYielder):
       }).json()
 
       if _.get(refresh_response, 'error'):
-        raise RuntimeError('Could not generate access token' + refresh_response)
+        raise RuntimeError('Could not generate access token' + json.dumps(refresh_response))
 
       identity_key = identity_config['config_key']
       identity_config['access_token'] = refresh_response['access_token']
@@ -93,6 +97,9 @@ class salesforceDataYielder(DataYielder):
     def values_for_keys(self, dict, keys):
       values = []
       for key in keys:
+        value = _.get(dict, key)
+        if value is None:
+          print dict, key, 'No value found for the key oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo'
         values.append(dict[key])
       return values
 
@@ -116,7 +123,7 @@ class salesforceDataYielder(DataYielder):
             """
         pass
 
-    def describe(self):
+    def describe(self, num_retries=0):
         """
             :return: metadata as a list of dictionaries in the following format
                 {
@@ -129,9 +136,12 @@ class salesforceDataYielder(DataYielder):
         sf_object = self.ds_config[CONFIG_FIELDS.SF_OBJECTS]
         try:
           sf_object_schema = getattr(sf, sf_object).describe()
-        except BulkApiError as err:
+        except Exception as err:
+          if num_retries == 3:
+            raise err
           salesforceDataYielder.regenerate_access_token(self, self.identity_config)
-          return describe(self)
+          num_retries += 1
+          return self.describe(self, num_retries)
     
         all_schema_fields = sf_object_schema['fields']
         selected_fields = self.ds_config[CONFIG_FIELDS.SF_OBJECT_SCHEMA]
