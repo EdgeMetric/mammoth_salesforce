@@ -5,7 +5,7 @@ import const
 import json
 import urllib2
 import requests
-import  logging as log
+import logging as log
 import sdk.const as sdkconst
 from sdk.const import COMMON_CONFIG_FIELDS, \
     COMMON_IDENTITY_FIELDS, NAME, VALUE
@@ -14,11 +14,12 @@ from threep.base import ThreePBase
 from sdk.utils import get_key_value_label, make_kv_list
 from pydash import py_ as _
 from simple_salesforce import Salesforce
-from salesforce_bulk.salesforce_bulk import BulkApiError 
-#Objects not supported by bulk query. These are meta objects
+from salesforce_bulk.salesforce_bulk import BulkApiError
+# Objects not supported by bulk query. These are meta objects
 
 # Insert your import statements here
 from runtime_import.libs.salesforce.util import salesforceDataYielder
+
 
 # End of import statements
 
@@ -32,10 +33,10 @@ class salesforceManager(ThreePBase):
     """
 
     def __init__(self, storage_handle, api_config):
-        
-        self.config_file = "/".join([os.path.dirname(__file__), const.CONFIG_FILE])
-        super(salesforceManager, self).__init__(storage_handle, api_config)
 
+        self.config_file = "/".join(
+            [os.path.dirname(__file__), const.CONFIG_FILE])
+        super(salesforceManager, self).__init__(storage_handle, api_config)
 
     def get_identity_spec(self, auth_spec):
         """
@@ -45,12 +46,13 @@ class salesforceManager(ThreePBase):
         In the simplest case just return the provided auth_spec parameter.
         """
 
-        sf_oauth_url = self.api_config.get("oauth2_code_url")
+        sf_oauth_url = const.CONFIGURATION.OAUTH2_CODE_URL
         client_id = self.api_config.get("client_id") 
-        redirect_uri = self.api_config.get('redirect_uri')
+        redirect_uri = const.CONFIGURATION.REDIRECT_URI
 
-
-        auth_spec["AUTH_URL"] = sf_oauth_url + "client_id=" + client_id + "&redirect_uri=" + redirect_uri + "&state=" + urllib2.quote(const.OAUTH_SAVE_URL)
+        auth_spec[
+            "AUTH_URL"] = sf_oauth_url + "client_id=" + client_id + "&redirect_uri=" + redirect_uri + "&state=" + urllib2.quote(
+            self.api_config.get("oauth_save_url"))
 
         return auth_spec
 
@@ -59,33 +61,37 @@ class salesforceManager(ThreePBase):
         :param params: dict, required to generate identity_config dict object for storage
         :return: newly created identity_config. The value obtained in params is
         a dictionary that should contain following keys:
-        
+
         """
         code = params.get(const.CODE)
-        
-        #Get access token, refresh token, user id etc.
-        payload = {
-          "code": code,
-          "client_id": self.api_config.get("client_id") ,
-          "client_secret": self.api_config.get("client_secret"),
-          "grant_type": "authorization_code",
-          "redirect_uri": self.api_config.get("redirect_uri")
-        }
-        access_token_response = requests.post(const.TOKEN_REQUEST_URL, params=payload).json()
 
-        #Now get the user name and email
+        # Get access token, refresh token, user id etc.
+
         payload = {
-          "access_token": access_token_response['access_token'],
-          "format": "json"
+            "code": code,
+            "client_id": self.api_config.get("client_id"),
+            "client_secret": self.api_config.get("client_secret"),
+            "grant_type": "authorization_code",
+            "redirect_uri": self.api_config.get("redirect_uri")
         }
-        user_details = requests.get(access_token_response['id'], params = payload).json()
+        access_token_response = requests.post(
+            const.CONFIGURATION.TOKEN_REQUEST_URL, params=payload).json()
+
+        # Now get the user name and email
+        payload = {
+            "access_token": access_token_response['access_token'],
+            "format": "json"
+        }
+        user_details = requests.get(access_token_response['id'],
+                                    params=payload).json()
 
         # create an identity dictionary and store this with the storage handle.
         identity_config = {
-          "access_token": access_token_response['access_token'],
-          "refresh_token": access_token_response['refresh_token'], 
-          "name": user_details['display_name'],
-          "value": user_details['email']
+            "access_token": access_token_response['access_token'],
+            "refresh_token": access_token_response['refresh_token'],
+            "name": user_details['display_name'],
+            "value": user_details['email'],
+            IDENTITY_FIELDS.INSTANCE_URL: access_token_response[IDENTITY_FIELDS.INSTANCE_URL]
         }
         return identity_config
 
@@ -94,7 +100,6 @@ class salesforceManager(ThreePBase):
             :param identity_config:
             :return: True/False: whether the given identity_config is valid or not
         """
-        
 
         return True
 
@@ -124,7 +129,7 @@ class salesforceManager(ThreePBase):
         # using make_kv_list method here, You can use your own logic.
 
         formatted_list = make_kv_list(identities, sdkconst.FIELD_IDS.VALUE,
-                                       sdkconst.FIELD_IDS.NAME)
+                                      sdkconst.FIELD_IDS.NAME)
         return formatted_list
 
     def delete_identity(self, identity_config):
@@ -150,63 +155,73 @@ class salesforceManager(ThreePBase):
         """
 
         try:
-          sf = Salesforce(instance= const.SF_INSTANCE, session_id=identity_config['access_token'])
-          sf_objects = sf.describe()["sobjects"]
+            sf = Salesforce(instance_url=identity_config[
+                IDENTITY_FIELDS.INSTANCE_URL],
+                            session_id=identity_config['access_token'])
+            sf_objects = sf.describe()["sobjects"]
         except Exception as err:
-          if num_retries == 3:
-            raise err
-          salesforceDataYielder.regenerate_access_token(self, identity_config)
-          #Call this function itself with new access token
-          num_retries += 1
-          return self.get_ds_config_spec(ds_config_spec, identity_config, params, ++num_retries) 
+            if num_retries == 3:
+                raise err
+            salesforceDataYielder.regenerate_access_token(self, identity_config)
+            # Call this function itself with new access token
+            num_retries += 1
+            return self.get_ds_config_spec(ds_config_spec, identity_config,
+                                           params, ++num_retries)
 
-        #List of all sf objects, name value pairs
+            # List of all sf objects, name value pairs
         sf_objects_json = _(sf_objects)
 
-        #Filter out the objects which are not retieveable
-        sf_objects_json = sf_objects_json.filter_(lambda sf_object: sf_object['retrieveable'])
+        # Filter out the objects which are not retieveable
+        sf_objects_json = sf_objects_json.filter_(
+            lambda sf_object: sf_object['retrieveable'])
 
-        #retrieve the {name, value} tuples for the objects
-        sf_objects_json = sf_objects_json.map_(lambda sf_object: {"name": sf_object['label'], "value": sf_object['name']})
+        # retrieve the {name, value} tuples for the objects
+        sf_objects_json = sf_objects_json.map_(
+            lambda sf_object: {"name": sf_object['label'],
+                               "value": sf_object['name']})
 
-        #Filter out the objects which can not be fetched in bulk
-        sf_objects_json = sf_objects_json.filter_(lambda sf_object: sf_object['value'] not in const.NON_BULK_OBJECTS)
+        # Filter out the objects which can not be fetched in bulk
+        sf_objects_json = sf_objects_json.filter_(
+            lambda sf_object: sf_object[
+                                  'value'] not in const.CONFIGURATION.NON_BULK_OBJECTS)
 
         sf_objects_json = sf_objects_json.value()
 
-        #sf_objects_json = [sf_objects_json[1], sf_objects_json[2]]
-        
-        #Set it in the spec to return
-        _.set_(ds_config_spec, 'ux.attributes.sf_objects.items', sf_objects_json)
+        # sf_objects_json = [sf_objects_json[1], sf_objects_json[2]]
+
+        # Set it in the spec to return
+        _.set_(ds_config_spec, 'ux.attributes.sf_objects.items',
+               sf_objects_json)
 
         first_object_name = _.head(sf_objects_json)['value']
         first_object_schema = getattr(sf, first_object_name).describe()
 
-        _.set_(ds_config_spec, 'fields.sf_objects.default_value', first_object_name)
+        _.set_(ds_config_spec, 'fields.sf_objects.default_value',
+               first_object_name)
 
         self.set_schema_items(ds_config_spec, first_object_schema)
 
         return ds_config_spec
 
-    def set_schema_items (self, ds_config_spec, object_schema):
+    def set_schema_items(self, ds_config_spec, object_schema):
         for field in object_schema['fields']:
-          field['value'] = field['name']
+            field['value'] = field['name']
 
-        #pick name, value pairs
+        # pick name, value pairs
         fields = object_schema['fields']
 
-        #Filter out the relationships
-        #TODO allow relationship handling in frontend. Then we will not filter out relationships here
-        fields = _(fields).filter_(lambda field: field['relationshipName'] is None)
+        # Filter out the relationships
+        # TODO allow relationship handling in frontend. Then we will not filter out relationships here
+        fields = _(fields).filter_(
+            lambda field: field['relationshipName'] is None)
 
-        #print 'setting schema itemsssssssssssssssssssss', map(lambda f: f['label'],fields.value())
         fields = fields.map_(lambda field: {
             "name": field['label'],
             "value": field['name'],
             "selected": True,
-            #"type": field['type'],
-            #"relationshipName": field['relationshipName'].encode('utf-8'),
-            #"referenceTo": field['referenceTo']
+            # "type": field['type'],
+            # "relationshipName": field['relationshipName'].encode('utf-8'),
+            # "referenceTo": field['referenceTo']
         }).value()
 
         _.set_(ds_config_spec, "ux.attributes.sf_object_schema.items", fields)
@@ -218,14 +233,15 @@ class salesforceManager(ThreePBase):
         a dictionary that should contain following keys:
              sf_object_schema,
              sf_objects,
-        
+
         """
 
         sf_object = params.get(CONFIG_FIELDS.SF_OBJECTS)
-        
+
         ds_config = {
             CONFIG_FIELDS.SF_OBJECTS: sf_object,
-            CONFIG_FIELDS.SF_OBJECT_SCHEMA: params.get(CONFIG_FIELDS.SF_OBJECT_SCHEMA)
+            CONFIG_FIELDS.SF_OBJECT_SCHEMA: params.get(
+                CONFIG_FIELDS.SF_OBJECT_SCHEMA)
         }
 
         return ds_config
@@ -253,9 +269,9 @@ class salesforceManager(ThreePBase):
                 ...
         """
 
-        formatted_list = make_kv_list(ds_config_list, sdkconst.VALUE, sdkconst.NAME)
+        formatted_list = make_kv_list(ds_config_list, sdkconst.VALUE,
+                                      sdkconst.NAME)
         return formatted_list
-
 
     def is_connection_valid(self, identity_config, ds_config=None):
         """
@@ -265,10 +281,11 @@ class salesforceManager(ThreePBase):
                      False if invalid
         """
         try:
-          salesforceDataYielder.regenerate_access_token(self, identity_config)
+            salesforceDataYielder.regenerate_access_token(self, identity_config)
         except RuntimeError as err:
-          log.error('Identity config is invalid', identity_config, 'Error is:', err)
-          return False
+            log.error('Identity config is invalid', identity_config,
+                      'Error is:', err)
+            return False
         return True
 
     def sanitize_identity(self, identity):
@@ -287,7 +304,7 @@ class salesforceManager(ThreePBase):
             :return: dict object with a mandatory key "is_valid",
             whether the given ds_config is valid or not
         """
-        return {'is_valid':True}
+        return {'is_valid': True}
 
     def get_data(self, identity_key, config_key, start_date=None,
                  end_date=None,
@@ -305,10 +322,10 @@ class salesforceManager(ThreePBase):
         :return: instance of DataYielder class defined in util.py
         """
         return salesforceDataYielder(storage_handle,
-                    api_config,
-                    identity_key,
-                    config_key,
-                    start_date, end_date, batch_id=batch_id)
+                                     api_config,
+                                     identity_key,
+                                     config_key,
+                                     start_date, end_date, batch_id=batch_id)
 
     def get_display_info(self, identity_config, ds_config):
         """
@@ -340,22 +357,25 @@ class salesforceManager(ThreePBase):
         """
         selected_sf_object = _.get(params, CONFIG_FIELDS.SF_OBJECTS)
 
-        sf = Salesforce(instance= const.SF_INSTANCE, session_id=identity_config['access_token'])
+        sf = Salesforce(
+            instance_url=identity_config[IDENTITY_FIELDS.INSTANCE_URL],
+            session_id=identity_config['access_token'])
         try:
-          sf_object_schema = getattr(sf, selected_sf_object).describe()
+            sf_object_schema = getattr(sf, selected_sf_object).describe()
         except Exception as err:
-          if num_retries == 3:
-            raise err
-          salesforceDataYielder.regenerate_access_token(self, identity_config)
+            if num_retries == 3:
+                raise err
+            salesforceDataYielder.regenerate_access_token(self, identity_config)
 
-          #Call this function itself with new access token
-          num_retries += 1
-          return self.augment_ds_config_spec(identity_config, params, num_retries)
-         
+            # Call this function itself with new access token
+            num_retries += 1
+            return self.augment_ds_config_spec(identity_config, params,
+                                               num_retries)
+
         new_ds_config = {}
 
         self.set_schema_items(new_ds_config, sf_object_schema)
-        #print  'augmenting ds config for sf objecct', selected_sf_object, 'with fields', _.get(new_ds_config, "ux.attributes.sf_object_schema.items")
+        # print  'augmenting ds config for sf objecct', selected_sf_object, 'with fields', _.get(new_ds_config, "ux.attributes.sf_object_schema.items")
 
         # Example of how can you play around json spec to customised UI based on user inputs
 

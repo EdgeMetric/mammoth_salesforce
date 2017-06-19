@@ -4,21 +4,25 @@ CONFIG_FILE = "salesforce.json"
 
 CODE = "code"
 
-SF_INSTANCE = 'na1.salesforce.com'
 
-TOKEN_REQUEST_URL = 'https://login.salesforce.com/services/oauth2/token' 
+class CONFIGURATION(object):
+    OAUTH2_CODE_URL = "https://login.salesforce.com/services/oauth2/authorize?response_type=code&"
+    TOKEN_REQUEST_URL = 'https://login.salesforce.com/services/oauth2/token'
+    NON_BULK_OBJECTS = ['DeclinedEventRelation', 'AcceptedEventRelation',
+                        'CaseStatus', 'ContractStatus', 'KnowledgeArticle',
+                        'KnowledgeArticleVersion',
+                        'KnowledgeArticleVersionHistory',
+                        'KnowledgeArticleViewStat', 'KnowledgeArticleVoteStat',
+                        'LeadStatus', 'OpportunityStage', 'PartnerRole',
+                        'RecentlyViewed', 'SolutionStatus', 'TaskPriority',
+                        'UserRecordAccess']
+    REDIRECT_URI = "https://redirect.mammoth.io/redirect/oauth2"
 
-OAUTH_SAVE_URL = "http://localhost:6346/sandbox?integration_key=salesforce"
 
-NON_BULK_OBJECTS = ['DeclinedEventRelation', 'AcceptedEventRelation', 'CaseStatus', 'ContractStatus', 'KnowledgeArticle', 'KnowledgeArticleVersion', 'KnowledgeArticleVersionHistory', 'KnowledgeArticleViewStat', 'KnowledgeArticleVoteStat', 'LeadStatus', 'OpportunityStage', 'PartnerRole', 'RecentlyViewed', 'SolutionStatus', 'TaskPriority', 'UserRecordAccess']
-
-class IDENTITY_FIELDS:
-
-    pass
+class IDENTITY_FIELDS(object):
+    INSTANCE_URL = "instance_url"
 
 
-class CONFIG_FIELDS:
+class CONFIG_FIELDS(object):
     SF_OBJECT_SCHEMA = "sf_object_schema"
     SF_OBJECTS = "sf_objects"
-    
-    pass
