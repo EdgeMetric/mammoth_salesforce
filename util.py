@@ -53,8 +53,8 @@ class salesforceDataYielder(DataYielder):
         try:
             sf = Salesforce(instance_url=self.identity_config[
                 const.IDENTITY_FIELDS.INSTANCE_URL],
-                            session_id=self.identity_config['access_token'])
-            bulk = SalesforceBulk(sessionId=sf.session_id, host=sf.sf_instance)
+                            session_id=self.identity_config['access_token'], version=const.CONFIGURATION.SUPPORTED_VERSION)
+            bulk = SalesforceBulk(sessionId=sf.session_id, host=sf.sf_instance, API_version=const.CONFIGURATION.SUPPORTED_VERSION)
             job = bulk.create_query_job(sf_object, contentType='CSV')
             batch = bulk.query(job, query_string)
         except Exception as err:
@@ -138,7 +138,7 @@ class salesforceDataYielder(DataYielder):
                }
         """
         sf = Salesforce(instance_url=self.identity_config[const.IDENTITY_FIELDS.INSTANCE_URL],
-                        session_id=self.identity_config['access_token'])
+                        session_id=self.identity_config['access_token'], version=const.CONFIGURATION.SUPPORTED_VERSION)
         sf_object = self.ds_config[CONFIG_FIELDS.SF_OBJECTS]
         try:
             sf_object_schema = getattr(sf, sf_object).describe()

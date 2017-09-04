@@ -6,6 +6,7 @@ CODE = "code"
 
 
 class CONFIGURATION(object):
+    SUPPORTED_VERSION="40.0"	
     OAUTH2_CODE_URL = "https://login.salesforce.com/services/oauth2/authorize?response_type=code&"
     TOKEN_REQUEST_URL = 'https://login.salesforce.com/services/oauth2/token'
     NON_BULK_OBJECTS = ['DeclinedEventRelation', 'AcceptedEventRelation',

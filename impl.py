@@ -154,10 +154,11 @@ class salesforceManager(ThreePBase):
             Any dynamic changes to ds_config_spec, if required, should be made here.
         """
 
+
         try:
             sf = Salesforce(instance_url=identity_config[
                 IDENTITY_FIELDS.INSTANCE_URL],
-                            session_id=identity_config['access_token'])
+                            session_id=identity_config['access_token'], version=const.CONFIGURATION.SUPPORTED_VERSION)
             sf_objects = sf.describe()["sobjects"]
         except Exception as err:
             if num_retries == 3:
@@ -362,7 +363,7 @@ class salesforceManager(ThreePBase):
 
         sf = Salesforce(
             instance_url=identity_config[IDENTITY_FIELDS.INSTANCE_URL],
-            session_id=identity_config['access_token'])
+            session_id=identity_config['access_token'], version=const.CONFIGURATION.SUPPORTED_VERSION)
         try:
             sf_object_schema = getattr(sf, selected_sf_object).describe()
         except Exception as err:
