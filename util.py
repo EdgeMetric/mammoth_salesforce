@@ -2,6 +2,7 @@
 import logging
 import const
 import json
+import unicodecsv
 import csv
 import requests
 from const import CONFIG_FIELDS
@@ -57,6 +58,7 @@ class salesforceDataYielder(DataYielder):
             bulk = SalesforceBulk(sessionId=sf.session_id, host=sf.sf_instance, API_version=const.CONFIGURATION.SUPPORTED_VERSION)
             job = bulk.create_query_job(sf_object, contentType='CSV')
             batch = bulk.query(job, query_string)
+            bulk.close_job(job)
         except Exception as err:
             if num_retries == 3:
                 raise err
@@ -65,18 +67,19 @@ class salesforceDataYielder(DataYielder):
             num_retries += 1
             return self.get_data_as_csv(file_path, num_retries)
 
-        bulk.wait_for_batch(job, batch)
+        while not bulk.is_batch_done(batch):
+          sleep(500)
         target = open(file_path, 'wb')
         writer = csv.writer(target, delimiter=',', quotechar='"',
                             quoting=csv.QUOTE_ALL)
 
         # writer.writerow(fields)
-
-        for row_dict in bulk.get_batch_result_iter(job, batch, parse_csv=True):
+        for result in bulk.get_all_results_for_query_batch(batch):
+          reader = unicodecsv.DictReader(result, encoding='utf-8')
+          for row_dict in reader:
             row = self.values_for_keys(row_dict, fields)
             row.append(self.batchId)
             writer.writerow(row)
-        bulk.close_job(job)
         return {}
 
     @staticmethod
