@@ -30,6 +30,7 @@
         {
             "api_config": {
                 "oauth_save_url":"",
+				"redirect_uri": "https://redirect.mammoth.io/redirect/oauth2",
                 "client_id": "3MVG9d8..z.hDcPKlOkZut5WVxvxssDXXJ.Gq_xCmyFQUqKfZ06xOYmQXfXUr82zlg1OQSBbbfo.DQJDFVNZp",
                 "client_secret": "4280938357341331565"
             },

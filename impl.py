@@ -210,10 +210,13 @@ class salesforceManager(ThreePBase):
         # pick name, value pairs
         fields = object_schema['fields']
 
+        compound_fields = _(fields).reduce_(
+			lambda soFar, field: soFar + [field['compoundFieldName']], []).flatten().compact().uniq().value()
+
         # Filter out the relationships
         # TODO allow relationship handling in frontend. Then we will not filter out relationships here
         fields = _(fields).filter_(
-            lambda field: field['relationshipName'] is None)
+            lambda field: field['relationshipName'] is None and not _.includes(compound_fields, field['name']))
 
         fields = fields.map_(lambda field: {
             "name": field['label'],
